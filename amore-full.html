@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amoré — KI-Dating der nächsten Generation</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#06060e;--deep:#0a0a18;--surface:#111122;--lift:#181830;--lift2:#1e1e38;
+  --gold:#c9a96e;--gold2:#e8cc94;--gold3:#a07840;
+  --rose:#d4607a;--blush:#ee9aaa;
+  --teal:#5ecfbe;--teal2:#a0ead8;
+  --plat:#9b7fe8;--plat2:#c4aef5;
+  --cream:#f0e6d3;--ash:#8888aa;--ash2:#5a5a7a;
+  --border:rgba(201,169,110,.12);--border-hi:rgba(201,169,110,.3);
+  --border-plat:rgba(155,127,232,.3);
+  --r:20px;
+  --nav-h:64px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--cream);font-family:'Jost',sans-serif;font-weight:300;overflow-x:hidden;cursor:none;}
+::selection{background:rgba(201,169,110,.2);}
+button,input,select,textarea{font-family:'Jost',sans-serif;}
+a{color:inherit;text-decoration:none;}
+
+/* ── CURSOR ── */
+#cur{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--gold);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s;}
+#cur-r{position:fixed;width:32px;height:32px;border-radius:50%;border:1px solid rgba(201,169,110,.4);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .1s ease;}
+
+/* ── AURORA ── */
+#aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.1;animation:drift var(--d,22s) ease-in-out infinite alternate;}
+.b1{width:800px;height:800px;background:radial-gradient(#c9a96e,transparent);top:-200px;left:-100px;--d:22s;}
+.b2{width:600px;height:600px;background:radial-gradient(#d4607a,transparent);top:40%;right:-150px;--d:30s;}
+.b3{width:500px;height:500px;background:radial-gradient(#5ecfbe,transparent);bottom:-100px;left:35%;--d:18s;}
+.b4{width:400px;height:400px;background:radial-gradient(#9b7fe8,transparent);bottom:25%;right:15%;--d:26s;}
+@keyframes drift{0%{transform:translate(0,0) scale(1);}50%{transform:translate(30px,-20px) scale(1.04);}100%{transform:translate(-15px,30px) scale(.97);}}
+#grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
+
+/* ── SCREENS ── */
+.screen{display:none;position:relative;z-index:10;min-height:100vh;}
+.screen.active{display:block;}
+
+/* ── SERIF ── */
+.serif{font-family:'Playfair Display',serif;}
+
+/* ── PILL ── */
+.pill{display:inline-flex;align-items:center;gap:8px;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);padding:6px 16px;border:1px solid var(--border-hi);border-radius:100px;background:rgba(201,169,110,.06);}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 36px;border-radius:100px;border:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:400;transition:all .3s;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--void);box-shadow:0 8px 32px rgba(201,169,110,.25);}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(201,169,110,.38);}
+.btn-ghost{background:transparent;color:var(--cream);border:1px solid rgba(255,255,255,.15);}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.btn-plat{background:linear-gradient(135deg,var(--plat),var(--plat2));color:#fff;box-shadow:0 8px 28px rgba(155,127,232,.3);}
+.btn-plat:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(155,127,232,.45);}
+.btn-rose{background:linear-gradient(135deg,var(--rose),var(--blush));color:#fff;box-shadow:0 8px 24px rgba(212,96,122,.3);}
+.btn-rose:hover{transform:scale(1.04);filter:brightness(1.08);}
+.btn-sm{padding:9px 22px;font-size:11px;}
+.btn-block{width:100%;}
+.btn-icon{width:44px;height:44px;border-radius:50%;background:var(--lift);border:1px solid var(--border-hi);color:var(--cream);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;}
+.btn-icon:hover{background:var(--lift2);border-color:var(--gold);}
+
+/* ── FIELDS ── */
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);}
+.field input,.field select,.field textarea{background:var(--lift);border:1px solid var(--border);border-radius:14px;color:var(--cream);font-size:14px;padding:12px 16px;outline:none;transition:border-color .3s,background .3s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);background:var(--lift2);}
+.field select option{background:var(--deep);}
+.field textarea{resize:none;height:80px;line-height:1.6;}
+input::placeholder,textarea::placeholder{color:var(--ash);opacity:.6;}
+
+/* ── TOP NAV ── */
+#topnav{position:fixed;top:0;width:100%;z-index:500;padding:16px 48px;display:flex;justify-content:space-between;align-items:center;transition:all .4s;}
+#topnav.solid{background:rgba(6,6,14,.93);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
+.tn-logo{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--gold);cursor:pointer;letter-spacing:1px;}
+.tn-center{display:flex;gap:6px;}
+.tn-tab{background:none;border:1px solid transparent;color:var(--ash);padding:7px 18px;border-radius:100px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .3s;font-family:'Jost',sans-serif;display:none;position:relative;}
+.tn-tab.vis{display:inline-flex;align-items:center;gap:6px;}
+.tn-tab.act{border-color:var(--border-hi);color:var(--gold);background:rgba(201,169,110,.07);}
+.tn-tab:hover:not(.act){color:var(--cream);}
+.tn-badge{background:var(--rose);color:#fff;font-size:9px;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;line-height:1;}
+.tn-right{display:flex;gap:10px;align-items:center;}
+.tn-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--rose));display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:2px solid var(--border-hi);transition:border-color .3s;}
+.tn-avatar:hover{border-color:var(--gold);}
+
+/* ── TOAST ── */
+#toast-wrap{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:9000;display:flex;flex-direction:column;gap:10px;align-items:center;pointer-events:none;}
+.toast{background:var(--lift);border:1px solid var(--border-hi);padding:11px 22px;border-radius:100px;font-size:13px;color:var(--cream);display:flex;align-items:center;gap:8px;animation:tIn .4s ease both;white-space:nowrap;box-shadow:0 16px 40px rgba(0,0,0,.5);}
+@keyframes tIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes tOut{from{opacity:1;}to{opacity:0;transform:translateY(8px);}}
+
+/* ── MODAL OVERLAY ── */
+.modal-bg{position:fixed;inset:0;background:rgba(6,6,14,.85);backdrop-filter:blur(12px);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-bg.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border-hi);border-radius:28px;padding:40px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;animation:mIn .4s ease both;}
+@keyframes mIn{from{opacity:0;transform:scale(.94) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:var(--lift);border:none;color:var(--ash);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;}
+.modal-close:hover{background:var(--lift2);color:var(--cream);}
+
+/* ── FADE IN ── */
+.fi{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease;}
+.fi.v{opacity:1;transform:none;}
+
+/* ── HEARTS / CONFETTI ── */
+.fh{position:fixed;pointer-events:none;z-index:9999;animation:fhUp 2.2s ease-out forwards;}
+@keyframes fhUp{0%{opacity:1;transform:translateY(0) scale(1) rotate(var(--r));}100%{opacity:0;transform:translateY(-150px) scale(.3) rotate(calc(var(--r)+25deg));}}
+.conf-p{position:fixed;pointer-events:none;z-index:9990;width:8px;height:8px;border-radius:2px;animation:cfFall var(--cd,3s) ease-in forwards;}
+@keyframes cfFall{0%{opacity:1;transform:translateY(0) rotate(0) translateX(0);}100%{opacity:0;transform:translateY(100vh) rotate(720deg) translateX(var(--cx,0));}}
+
+/* ══════════════════════════════════
+   SCREEN: LANDING
+══════════════════════════════════ */
+#s-land{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:80px 24px 60px;}
+.land-title{font-family:'Playfair Display',serif;font-size:clamp(54px,9vw,110px);font-weight:400;line-height:.95;letter-spacing:-2px;margin:28px 0 22px;}
+.land-title em{font-style:italic;color:var(--gold);}
+.land-sub{max-width:430px;font-size:15px;line-height:1.85;color:var(--ash);margin-bottom:44px;}
+.land-feats{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:52px;}
+.lf{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ash);padding:7px 16px;border:1px solid var(--border);border-radius:100px;background:rgba(255,255,255,.02);}
+.land-ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.land-stats{display:flex;gap:48px;justify-content:center;padding-top:44px;border-top:1px solid var(--border);margin-top:56px;flex-wrap:wrap;}
+.stat .sn{font-family:'Playfair Display',serif;font-size:40px;font-weight:400;color:var(--gold);display:block;line-height:1;}
+.stat .sl{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--ash);margin-top:6px;}
+
+/* ══════════════════════════════════
+   SCREEN: ONBOARDING
+══════════════════════════════════ */
+#s-onboard{padding:90px 24px 60px;}
+.onb-wrap{max-width:560px;margin:0 auto;}
+.prog-bar{display:flex;gap:5px;margin-bottom:40px;}
+.ps{flex:1;height:2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}
+.ps-fill{height:100%;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .6s ease;}
+.ps.done .ps-fill{transform:scaleX(1);}
+.ps.act .ps-fill{transform:scaleX(.5);}
+.onb-step-lbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.onb-h{font-family:'Playfair Display',serif;font-size:30px;font-weight:400;margin-bottom:6px;}
+.onb-s{color:var(--ash);font-size:13px;line-height:1.7;margin-bottom:28px;}
+.ostep{display:none;}.ostep.act{display:block;}
+.gr2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.gr1{margin-bottom:14px;}
+.av-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.av{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;border:2px solid var(--border);background:var(--lift);cursor:pointer;transition:all .3s;}
+.av:hover{border-color:var(--gold);transform:scale(1.06);}
+.av.sel{border-color:var(--gold);background:rgba(201,169,110,.12);box-shadow:0 0 0 4px rgba(201,169,110,.1);}
+.int-wrap{display:flex;flex-wrap:wrap;gap:8px;}
+.int-b{display:flex;align-items:center;gap:5px;padding:8px 15px;border-radius:100px;border:1px solid var(--border);background:var(--lift);cursor:pointer;transition:all .25s;font-size:13px;color:var(--ash);}
+.int-b:hover{border-color:var(--gold);color:var(--gold);}
+.int-b.sel{background:rgba(201,169,110,.12);border-color:var(--gold);color:var(--gold);}
+.qopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.qopt{background:var(--lift);border:1px solid var(--border);border-radius:16px;padding:16px 14px;cursor:pointer;transition:all .3s;}
+.qopt:hover{border-color:var(--gold);background:var(--lift2);}
+.qopt.sel{border-color:var(--gold);background:rgba(201,169,110,.1);}
+.qopt .qe{font-size:22px;margin-bottom:6px;}
+.qopt .ql{font-size:13px;color:var(--cream);margin-bottom:2px;}
+.qopt .qs{font-size:11px;color:var(--ash);}
+.dpref-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.dpref{background:var(--lift);border:1px solid var(--border);border-radius:16px;padding:18px 14px;cursor:pointer;transition:all .3s;text-align:center;}
+.dpref:hover{border-color:var(--gold);}
+.dpref.sel{border-color:var(--gold);background:rgba(201,169,110,.08);}
+.dpref .dp-i{font-size:28px;margin-bottom:8px;}
+.dpref .dp-l{font-size:13px;color:var(--cream);margin-bottom:3px;}
+.dpref .dp-d{font-size:11px;color:var(--ash);}
+.onb-nav{display:flex;justify-content:space-between;align-items:center;margin-top:32px;}
+.onb-bk{background:none;border:none;color:var(--ash);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:color .3s;padding:0;}
+.onb-bk:hover{color:var(--cream);}
+
+/* ══════════════════════════════════
+   SCREEN: SWIPE
+══════════════════════════════════ */
+#s-swipe{display:flex;flex-direction:column;align-items:center;padding:90px 24px 40px;min-height:100vh;}
+.swipe-top{display:flex;justify-content:space-between;align-items:center;width:340px;margin-bottom:22px;}
+.swipe-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:400;}
+.swipe-limits{display:flex;align-items:center;gap:10px;}
+.limit-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ash);background:var(--lift);border:1px solid var(--border);padding:5px 12px;border-radius:100px;}
+.limit-pill.low{color:var(--rose);border-color:rgba(212,96,122,.3);}
+.deck-wrap{position:relative;width:340px;height:510px;margin-bottom:28px;}
+.sc{position:absolute;inset:0;border-radius:28px;overflow:hidden;cursor:grab;user-select:none;transition:box-shadow .3s;box-shadow:0 30px 70px rgba(0,0,0,.6);transform-origin:bottom center;}
+.sc:active{cursor:grabbing;}
+.sc.flying{transition:transform .55s cubic-bezier(.2,.8,.3,1),opacity .45s;}
+.sc-photo{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;}
+.sc-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,6,14,1) 0%,rgba(6,6,14,.45) 45%,transparent 80%);}
+.sc-info{position:absolute;bottom:0;left:0;right:0;padding:22px;}
+.sc-comp{display:inline-flex;align-items:center;gap:5px;background:rgba(201,169,110,.13);backdrop-filter:blur(10px);border:1px solid rgba(201,169,110,.28);border-radius:100px;padding:4px 12px;font-size:11px;color:var(--gold);margin-bottom:11px;}
+.sc-name{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;display:flex;align-items:baseline;gap:8px;}
+.sc-age{font-family:'Jost',sans-serif;font-size:15px;color:var(--ash);}
+.sc-loc{font-size:12px;color:var(--ash);margin:3px 0 11px;}
+.sc-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.sc-tag{padding:4px 10px;border-radius:100px;font-size:10px;background:rgba(255,255,255,.08);backdrop-filter:blur(6px);color:rgba(240,230,211,.7);}
+.sc-bdg{position:absolute;top:16px;right:16px;background:rgba(6,6,14,.75);backdrop-filter:blur(10px);border:1px solid var(--border-hi);border-radius:100px;padding:4px 12px;font-size:9px;letter-spacing:1.5px;color:var(--gold);}
+.sc-online{position:absolute;top:16px;left:16px;width:9px;height:9px;background:#5fe0a0;border-radius:50%;box-shadow:0 0 0 3px rgba(95,224,160,.18);animation:pls 2s infinite;}
+@keyframes pls{0%,100%{box-shadow:0 0 0 3px rgba(95,224,160,.15);}50%{box-shadow:0 0 0 6px rgba(95,224,160,.06);}}
+.sc-like{position:absolute;top:26px;right:18px;border:3px solid #5fe0a0;color:#5fe0a0;border-radius:8px;padding:6px 14px;font-size:15px;font-weight:700;letter-spacing:2px;opacity:0;transform:rotate(15deg);}
+.sc-nope{position:absolute;top:26px;left:18px;border:3px solid var(--rose);color:var(--rose);border-radius:8px;padding:6px 14px;font-size:15px;font-weight:700;letter-spacing:2px;opacity:0;transform:rotate(-15deg);}
+.sc-star{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:20px;font-weight:700;letter-spacing:2px;opacity:0;}
+.deck-btns{display:flex;align-items:center;gap:14px;}
+.db{display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;border-radius:50%;transition:all .3s;}
+.db-pass{width:54px;height:54px;background:var(--lift);border:1.5px solid rgba(212,96,122,.35);color:var(--rose);font-size:22px;}
+.db-pass:hover{background:rgba(212,96,122,.1);border-color:var(--rose);}
+.db-like{width:66px;height:66px;background:linear-gradient(135deg,var(--rose),var(--blush));color:#fff;font-size:24px;box-shadow:0 8px 28px rgba(212,96,122,.4);}
+.db-like:hover{transform:scale(1.08);box-shadow:0 16px 36px rgba(212,96,122,.5);}
+.db-star{width:54px;height:54px;background:var(--lift);border:1.5px solid rgba(201,169,110,.35);color:var(--gold);font-size:20px;}
+.db-star:hover{background:rgba(201,169,110,.1);border-color:var(--gold);}
+.db-rewind{width:44px;height:44px;background:var(--lift);border:1.5px solid var(--border);color:var(--ash);font-size:17px;}
+.db-rewind:hover{border-color:var(--plat);color:var(--plat);}
+.db-boost{width:44px;height:44px;background:var(--lift);border:1.5px solid var(--border);color:var(--plat);font-size:17px;}
+.db-boost:hover{background:rgba(155,127,232,.1);border-color:var(--plat);}
+.swipe-meta{font-size:11px;color:var(--ash);margin-top:12px;letter-spacing:.5px;}
+
+/* ══════════════════════════════════
+   SCREEN: MATCHES
+══════════════════════════════════ */
+#s-matches{padding:88px 44px 60px;}
+.matches-hd{max-width:1200px;margin:0 auto 36px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;}
+.matches-hd h2{font-family:'Playfair Display',serif;font-size:34px;font-weight:400;}
+.matches-hd h2 em{font-style:italic;color:var(--gold);}
+.mhd-sub{color:var(--ash);font-size:13px;margin-top:4px;}
+.mfil{display:flex;gap:7px;flex-wrap:wrap;}
+.mfb{background:transparent;border:1px solid var(--border);color:var(--ash);padding:7px 17px;border-radius:100px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .3s;font-family:'Jost',sans-serif;}
+.mfb:hover,.mfb.act{border-color:var(--gold);color:var(--gold);background:rgba(201,169,110,.06);}
+.m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px;max-width:1200px;margin:0 auto;}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:transform .4s cubic-bezier(.2,.8,.3,1),box-shadow .4s,border-color .3s;}
+.mc:hover{transform:translateY(-9px);box-shadow:0 36px 66px rgba(0,0,0,.6);border-color:var(--border-hi);}
+.mc-ph{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.mc-gr{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,6,14,1) 0%,rgba(6,6,14,.35) 50%,transparent 100%);}
+.mc-cb-wrap{position:absolute;bottom:68px;left:14px;right:14px;}
+.mc-cl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+.mc-ct{height:2px;background:rgba(255,255,255,.06);border-radius:2px;}
+.mc-cf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.mc-bdg{position:absolute;top:13px;right:13px;padding:4px 10px;border-radius:100px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--void);font-weight:500;}
+.mc-bdg.new{background:linear-gradient(135deg,var(--teal),var(--teal2));color:var(--void);}
+.mc-on{position:absolute;top:13px;left:13px;width:9px;height:9px;background:#5fe0a0;border-radius:50%;animation:pls 2s infinite;}
+.mc-body{padding:13px 15px 17px;}
+.mc-nm{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;display:flex;align-items:baseline;gap:7px;margin-bottom:3px;}
+.mc-age{font-family:'Jost',sans-serif;font-size:12px;color:var(--ash);}
+.mc-loc{font-size:11px;color:var(--ash);margin-bottom:9px;}
+.mc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;}
+.mc-tag{padding:3px 9px;border-radius:100px;font-size:9px;background:rgba(201,169,110,.06);border:1px solid rgba(201,169,110,.16);color:var(--gold);}
+.mc-acts{display:flex;gap:6px;}
+.mc-heart{width:38px;height:38px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--rose),var(--blush));color:#fff;font-size:15px;cursor:pointer;flex-shrink:0;transition:all .3s;}
+.mc-heart:hover{transform:scale(1.1);}
+.mc-ai{flex:1;background:rgba(201,169,110,.07);border:1px solid var(--border-hi);color:var(--gold);border-radius:11px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;padding:9px;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Jost',sans-serif;}
+.mc-ai:hover{background:var(--gold);color:var(--void);border-color:var(--gold);}
+.mc-chat{flex:1;background:var(--lift);border:1px solid var(--border);color:var(--ash);border-radius:11px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;padding:9px;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Jost',sans-serif;}
+.mc-chat:hover{border-color:var(--teal);color:var(--teal);}
+
+/* ══════════════════════════════════
+   SCREEN: AI DATE
+══════════════════════════════════ */
+#s-date{padding:88px 44px 80px;}
+.date-back{display:inline-flex;align-items:center;gap:7px;background:none;border:1px solid var(--border);border-radius:100px;color:var(--ash);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:8px 18px;cursor:pointer;transition:all .3s;margin-bottom:36px;font-family:'Jost',sans-serif;}
+.date-back:hover{border-color:var(--gold);color:var(--gold);}
+.date-lay{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;}
+.dp-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:90px;}
+.dp-ph{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.dp-gr{position:absolute;inset:0;background:linear-gradient(to top,var(--surface) 0%,transparent 60%);}
+.dp-bd{padding:18px 20px 24px;}
+.dp-nm{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin-bottom:3px;}
+.dp-mt{font-size:12px;color:var(--ash);margin-bottom:9px;}
+.dp-bio{font-size:13px;line-height:1.75;color:rgba(240,230,211,.55);margin-bottom:14px;}
+.dp-comp{background:rgba(201,169,110,.05);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:14px;}
+.dp-cl2{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;}
+.dp-cn{font-family:'Playfair Display',serif;font-size:34px;color:var(--gold);line-height:1;}
+.dp-cd{font-size:11px;color:var(--ash);margin-top:4px;}
+.dp-sh{margin-bottom:0;}
+.dp-shl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ash);margin-bottom:7px;}
+.dp-shtags{display:flex;flex-wrap:wrap;gap:5px;}
+.dp-shtag{padding:3px 9px;border-radius:100px;font-size:10px;background:rgba(94,207,190,.07);border:1px solid rgba(94,207,190,.2);color:var(--teal);}
+.ai-col{display:flex;flex-direction:column;gap:18px;}
+.ai-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px 30px;}
+.ai-box-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.ai-ico{width:46px;height:46px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.ai-box-title{font-family:'Playfair Display',serif;font-size:21px;font-weight:400;}
+.ai-box-sub{font-size:12px;color:var(--ash);margin-top:2px;}
+.stg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px;}
+.sto{background:var(--lift);border:1px solid var(--border);border-radius:15px;padding:14px 10px;cursor:pointer;transition:all .3s;text-align:center;}
+.sto:hover{border-color:var(--gold);background:var(--lift2);}
+.sto.sel{border-color:var(--gold);background:rgba(201,169,110,.1);}
+.sto-i{font-size:22px;display:block;margin-bottom:5px;}
+.sto-l{font-size:12px;color:var(--cream);margin-bottom:2px;}
+.sto-d{font-size:10px;color:var(--ash);}
+.pref-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px;}
+.ps2{display:flex;flex-direction:column;gap:5px;}
+.ps2 label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);}
+.ps2 select{background:var(--lift);border:1px solid var(--border);border-radius:12px;color:var(--cream);font-size:13px;padding:10px 13px;outline:none;transition:border-color .3s;}
+.ps2 select:focus{border-color:var(--gold);}
+.ps2 select option{background:var(--deep);}
+.btn-gen{width:100%;padding:17px;border-radius:15px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--void);font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .4s;box-shadow:0 10px 36px rgba(201,169,110,.26);}
+.btn-gen:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 20px 48px rgba(201,169,110,.38);}
+.btn-gen:disabled{opacity:.45;cursor:not-allowed;}
+/* Loading */
+.ai-load{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:56px 30px;text-align:center;display:none;}
+.ai-load.show{display:block;}
+.load-ring{width:68px;height:68px;border-radius:50%;margin:0 auto 24px;background:conic-gradient(var(--gold) 0%,var(--gold2) 40%,transparent 40%);animation:spin 1s linear infinite;position:relative;}
+.load-ring::after{content:'✦';position:absolute;inset:8px;background:var(--surface);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--gold);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-txt{font-family:'Playfair Display',serif;font-size:19px;font-style:italic;color:var(--ash);animation:breathe 2s ease infinite;margin-bottom:18px;}
+@keyframes breathe{0%,100%{opacity:.5;}50%{opacity:1;}}
+.lsteps{display:flex;flex-direction:column;gap:7px;}
+.ls{font-size:12px;color:var(--ash);opacity:0;transition:opacity .5s,transform .5s;transform:translateY(5px);display:flex;align-items:center;justify-content:center;gap:7px;}
+.ls.v{opacity:1;transform:none;}
+.ls::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+/* Result */
+.ai-res{background:var(--surface);border:1px solid var(--border-hi);border-radius:var(--r);padding:32px 30px;display:none;animation:rU .6s ease both;}
+.ai-res.show{display:block;}
+@keyframes rU{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
+.res-badge{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,rgba(201,169,110,.12),rgba(201,169,110,.04));border:1px solid var(--border-hi);border-radius:100px;padding:5px 14px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.res-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;line-height:1.15;margin-bottom:7px;}
+.res-tl{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;color:var(--gold2);margin-bottom:10px;line-height:1.5;}
+.res-vibe{font-size:14px;color:var(--ash);margin-bottom:0;}
+.res-sec{margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--border);}
+.res-sec:last-of-type{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.res-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.res-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.res-txt{font-size:13px;line-height:1.8;color:rgba(240,230,211,.72);}
+.dchips{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0;}
+.dchip{background:rgba(201,169,110,.05);border:1px solid var(--border);border-radius:13px;padding:13px 8px;text-align:center;}
+.dchip-i{font-size:18px;margin-bottom:5px;}
+.dchip-v{font-size:13px;color:var(--cream);margin-bottom:2px;}
+.dchip-k{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ash);}
+.convos{display:flex;flex-direction:column;gap:7px;}
+.convo{background:rgba(201,169,110,.04);border-left:2px solid var(--gold);padding:10px 14px;border-radius:0 11px 11px 0;font-size:13px;font-style:italic;color:rgba(240,230,211,.7);line-height:1.6;}
+.spec-box{background:linear-gradient(135deg,rgba(201,169,110,.07),rgba(212,96,122,.04));border:1px solid var(--border-hi);border-radius:14px;padding:16px 18px;}
+.spec-box p{font-size:13px;line-height:1.75;color:var(--cream);}
+.warn-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;}
+.warn-chip{background:rgba(212,96,122,.07);border:1px solid rgba(212,96,122,.2);color:var(--blush);font-size:10px;padding:4px 11px;border-radius:100px;}
+.res-acts{margin-top:24px;display:flex;gap:10px;}
+.res-acts .btn{flex:1;font-size:11px;}
+
+/* ══════════════════════════════════
+   SCREEN: CHAT
+══════════════════════════════════ */
+#s-chat{padding:88px 24px 40px;display:flex;flex-direction:column;align-items:center;}
+.chat-wrap{max-width:620px;width:100%;}
+.ch-hd{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.ch-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;flex-shrink:0;}
+.ch-av-dot{position:absolute;bottom:1px;right:1px;width:11px;height:11px;background:#5fe0a0;border-radius:50%;border:2px solid var(--surface);}
+.ch-nm{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;}
+.ch-st{font-size:11px;color:var(--teal);}
+.ch-acts{margin-left:auto;display:flex;gap:7px;}
+.ch-body{background:rgba(10,10,24,.5);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:20px;height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
+.ch-body::-webkit-scrollbar{width:3px;}.ch-body::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:2px;}
+.msg{display:flex;gap:9px;max-width:78%;animation:msgIn .3s ease both;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.msg.me{flex-direction:row-reverse;align-self:flex-end;}
+.msg-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;align-self:flex-end;}
+.msg-bbl{padding:11px 15px;border-radius:17px;font-size:13px;line-height:1.6;}
+.msg.them .msg-bbl{background:var(--lift);border:1px solid var(--border);color:var(--cream);border-radius:4px 17px 17px 17px;}
+.msg.me .msg-bbl{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--void);border-radius:17px 17px 4px 17px;}
+.msg-time{font-size:10px;color:var(--ash);align-self:flex-end;margin-bottom:2px;}
+.msg-read{font-size:10px;color:var(--teal);align-self:flex-end;margin-bottom:2px;}
+.typing-bbl{display:flex;gap:4px;padding:12px 16px;background:var(--lift);border:1px solid var(--border);border-radius:4px 17px 17px 17px;width:56px;}
+.t-dot{width:7px;height:7px;border-radius:50%;background:var(--ash);animation:tb .8s ease infinite;}
+.t-dot:nth-child(2){animation-delay:.15s;}.t-dot:nth-child(3){animation-delay:.3s;}
+@keyframes tb{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-7px);}}
+.date-msg-card{background:var(--surface);border:1px solid var(--border-hi);border-radius:18px;padding:18px;margin:4px 0;max-width:320px;}
+.dmc-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.dmc-title{font-family:'Playfair Display',serif;font-size:17px;margin-bottom:4px;}
+.dmc-sub{font-size:12px;color:var(--ash);line-height:1.5;margin-bottom:11px;}
+.dmc-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.dmc-chip{padding:3px 9px;border-radius:100px;background:rgba(201,169,110,.08);border:1px solid var(--border);font-size:10px;color:var(--gold);}
+.ch-input-row{background:var(--surface);border:1px solid var(--border);border-radius:0 0 20px 20px;padding:14px 16px;display:flex;gap:9px;align-items:center;}
+.ch-input{flex:1;background:var(--lift);border:1px solid var(--border);border-radius:100px;color:var(--cream);font-size:13px;padding:10px 17px;outline:none;transition:border-color .3s;}
+.ch-input:focus{border-color:var(--gold);}
+.ch-send{width:40px;height:40px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--void);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0;}
+.ch-send:hover{transform:scale(1.08);}
+
+/* ══════════════════════════════════
+   SCREEN: WHO LIKED YOU
+══════════════════════════════════ */
+#s-liked{padding:88px 44px 60px;}
+.liked-hd{max-width:900px;margin:0 auto 36px;}
+.liked-hd h2{font-family:'Playfair Display',serif;font-size:34px;font-weight:400;margin-bottom:6px;}
+.liked-hd p{color:var(--ash);font-size:13px;}
+.liked-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;max-width:900px;margin:0 auto;}
+.liked-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;position:relative;transition:transform .3s,box-shadow .3s;}
+.liked-card:hover{transform:translateY(-6px);box-shadow:0 24px 50px rgba(0,0,0,.5);}
+.lc-ph{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:56px;position:relative;}
+.lc-blur{position:absolute;inset:0;backdrop-filter:blur(18px);background:rgba(6,6,14,.3);}
+.lc-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.lc-lock-i{font-size:28px;}
+.lc-lock-t{font-size:11px;letter-spacing:1px;color:var(--gold);}
+.lc-body{padding:12px 14px 16px;}
+.lc-nm{font-family:'Playfair Display',serif;font-size:17px;filter:blur(6px);}
+.lc-nm.unblur{filter:none;}
+.lc-meta{font-size:11px;color:var(--ash);margin-top:3px;}
+.lc-heart{font-size:18px;color:var(--rose);position:absolute;top:10px;right:10px;}
+.liked-cta{max-width:900px;margin:32px auto 0;background:linear-gradient(135deg,rgba(201,169,110,.07),rgba(155,127,232,.05));border:1px solid var(--border-hi);border-radius:20px;padding:32px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+.liked-cta-text h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin-bottom:6px;}
+.liked-cta-text p{color:var(--ash);font-size:13px;line-height:1.6;}
+
+/* ══════════════════════════════════
+   SCREEN: PREMIUM
+══════════════════════════════════ */
+#s-premium{padding:88px 44px 80px;}
+.prem-hd{text-align:center;max-width:600px;margin:0 auto 56px;}
+.prem-hd h2{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,60px);font-weight:400;margin-bottom:12px;}
+.prem-hd h2 em{font-style:italic;color:var(--gold);}
+.prem-hd p{color:var(--ash);font-size:15px;line-height:1.8;}
+/* billing toggle */
+.bill-toggle{display:inline-flex;background:var(--lift);border:1px solid var(--border);border-radius:100px;padding:4px;gap:4px;margin-bottom:48px;}
+.bt-opt{padding:8px 22px;border-radius:100px;border:none;background:transparent;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ash);cursor:pointer;transition:all .3s;position:relative;}
+.bt-opt.act{background:var(--gold);color:var(--void);}
+.bt-save{background:var(--rose);color:#fff;font-size:9px;padding:2px 7px;border-radius:100px;position:absolute;top:-8px;right:-4px;}
+/* plan cards */
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:980px;margin:0 auto 56px;}
+.plan{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px 28px;position:relative;transition:transform .3s,border-color .3s;}
+.plan:hover{transform:translateY(-4px);}
+.plan.popular{border-color:var(--gold);background:linear-gradient(160deg,rgba(201,169,110,.06),var(--surface));}
+.plan.plat-p{border-color:var(--border-plat);background:linear-gradient(160deg,rgba(155,127,232,.07),var(--surface));}
+.plan-pop-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--void);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;padding:5px 18px;border-radius:100px;white-space:nowrap;}
+.plan-pop-badge.plat{background:linear-gradient(135deg,var(--plat),var(--plat2));}
+.plan-icon{font-size:32px;margin-bottom:16px;display:block;}
+.plan-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin-bottom:6px;}
+.plan-desc{font-size:13px;color:var(--ash);margin-bottom:20px;line-height:1.6;}
+.plan-price{margin-bottom:24px;}
+.plan-amount{font-family:'Playfair Display',serif;font-size:40px;font-weight:400;line-height:1;color:var(--cream);}
+.plan-amount.gold-c{color:var(--gold);}
+.plan-amount.plat-c{color:var(--plat);}
+.plan-period{font-size:13px;color:var(--ash);margin-top:4px;}
+.plan-period span{text-decoration:line-through;color:var(--ash2);}
+.plan-feats{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.plan-feats li{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(240,230,211,.8);line-height:1.5;}
+.plan-feats li::before{content:'✓';color:var(--gold);flex-shrink:0;margin-top:1px;}
+.plan-feats li.plat-feat::before{color:var(--plat);}
+.plan-feats li.dim{color:var(--ash2);}
+.plan-feats li.dim::before{content:'—';color:var(--ash2);}
+/* Add-ons */
+.addons-section{max-width:980px;margin:0 auto 56px;}
+.addons-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;margin-bottom:24px;text-align:center;}
+.addons-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.addon{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;transition:all .3s;cursor:pointer;}
+.addon:hover{border-color:var(--gold);background:var(--lift);transform:translateY(-2px);}
+.addon-icon{font-size:28px;margin-bottom:10px;}
+.addon-name{font-size:15px;font-weight:400;color:var(--cream);margin-bottom:4px;}
+.addon-desc{font-size:12px;color:var(--ash);line-height:1.5;margin-bottom:14px;}
+.addon-price{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);}
+/* Guarantee */
+.guarantee{max-width:980px;margin:0 auto;background:rgba(201,169,110,.04);border:1px solid var(--border);border-radius:18px;padding:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.gu-icon{font-size:36px;flex-shrink:0;}
+.gu-text h4{font-size:16px;font-weight:400;color:var(--cream);margin-bottom:5px;}
+.gu-text p{font-size:13px;color:var(--ash);line-height:1.6;}
+
+/* ══════════════════════════════════
+   SCREEN: PROFILE / SETTINGS
+══════════════════════════════════ */
+#s-profile{padding:88px 44px 80px;}
+.profile-lay{max-width:900px;margin:0 auto;display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start;}
+/* sidebar */
+.prof-sidebar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;position:sticky;top:90px;}
+.prof-av-big{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 14px;background:linear-gradient(135deg,var(--gold),var(--rose));border:3px solid var(--border-hi);}
+.prof-nm{font-family:'Playfair Display',serif;font-size:22px;text-align:center;font-weight:400;margin-bottom:4px;}
+.prof-loc{font-size:12px;color:var(--ash);text-align:center;margin-bottom:16px;}
+.prof-tier{display:flex;justify-content:center;margin-bottom:22px;}
+.tier-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:100px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;}
+.tier-free{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--ash);}
+.tier-gold{background:rgba(201,169,110,.12);border:1px solid var(--border-hi);color:var(--gold);}
+.tier-plat{background:rgba(155,127,232,.12);border:1px solid var(--border-plat);color:var(--plat);}
+.prof-nav{display:flex;flex-direction:column;gap:3px;}
+.pn-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;cursor:pointer;transition:all .3s;font-size:13px;color:var(--ash);border:none;background:none;font-family:'Jost',sans-serif;text-align:left;width:100%;}
+.pn-item:hover{background:var(--lift);color:var(--cream);}
+.pn-item.act{background:rgba(201,169,110,.1);color:var(--gold);}
+.pn-item .pn-i{font-size:16px;width:20px;text-align:center;}
+/* main content tabs */
+.prof-main{display:flex;flex-direction:column;gap:18px;}
+.prof-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;display:none;}
+.prof-section.act{display:block;}
+.ps-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin-bottom:4px;}
+.ps-sub{font-size:13px;color:var(--ash);margin-bottom:24px;line-height:1.6;}
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.pf-grid.one{grid-template-columns:1fr;}
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stat-box{background:var(--lift);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;}
+.sb-n{font-family:'Playfair Display',serif;font-size:28px;color:var(--gold);line-height:1;}
+.sb-l{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ash);margin-top:4px;}
+/* toggle switch */
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.tr-left{}.tr-label{font-size:14px;color:var(--cream);margin-bottom:3px;}
+.tr-sub{font-size:12px;color:var(--ash);}
+.tr-prem{font-size:10px;color:var(--gold);display:inline-flex;align-items:center;gap:4px;margin-top:3px;}
+.toggle{width:46px;height:26px;background:var(--lift2);border-radius:100px;position:relative;cursor:pointer;transition:background .3s;flex-shrink:0;border:1px solid var(--border);}
+.toggle.on{background:var(--gold);}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .3s;box-shadow:0 2px 4px rgba(0,0,0,.3);}
+.toggle.on::after{transform:translateX(20px);}
+/* notification settings */
+.notif-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border);}
+.notif-item:last-child{border-bottom:none;}
+.ni-label{font-size:14px;color:var(--cream);margin-bottom:2px;}
+.ni-sub{font-size:12px;color:var(--ash);}
+/* safety */
+.safety-card{background:rgba(94,207,190,.05);border:1px solid rgba(94,207,190,.18);border-radius:14px;padding:16px 18px;margin-bottom:12px;}
+.sc2-title{font-size:14px;color:var(--teal);margin-bottom:5px;display:flex;align-items:center;gap:7px;}
+.sc2-desc{font-size:12px;color:var(--ash);line-height:1.6;}
+/* delete zone */
+.danger-zone{background:rgba(212,96,122,.04);border:1px solid rgba(212,96,122,.18);border-radius:14px;padding:18px 20px;}
+.dz-title{font-size:14px;color:var(--rose);margin-bottom:6px;}
+.dz-desc{font-size:12px;color:var(--ash);line-height:1.6;margin-bottom:14px;}
+
+/* ── BOOST MODAL ── */
+.boost-modal-content{text-align:center;}
+.boost-icon-big{font-size:56px;margin-bottom:16px;}
+.boost-ring{width:120px;height:120px;border-radius:50%;margin:0 auto 24px;background:conic-gradient(var(--plat),var(--plat2),var(--plat));animation:spin 3s linear infinite;position:relative;display:flex;align-items:center;justify-content:center;}
+.boost-ring-inner{width:92px;height:92px;background:var(--surface);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;}
+.boost-opts{display:flex;flex-direction:column;gap:10px;margin:20px 0;}
+.boost-opt{background:var(--lift);border:1px solid var(--border);border-radius:16px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .3s;}
+.boost-opt:hover,.boost-opt.sel{border-color:var(--plat);background:rgba(155,127,232,.08);}
+.bo-left{display:flex;align-items:center;gap:12px;}
+.bo-icon{font-size:22px;}
+.bo-label{font-size:14px;color:var(--cream);margin-bottom:2px;}
+.bo-sub{font-size:11px;color:var(--ash);}
+.bo-price{font-family:'Playfair Display',serif;font-size:20px;color:var(--plat);}
+
+/* ── MATCH MODAL ── */
+.match-modal-content{text-align:center;}
+.mm-hearts{font-size:48px;margin-bottom:20px;animation:heartbeat 1s ease infinite;}
+@keyframes heartbeat{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+.mm-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:400;margin-bottom:8px;}
+.mm-sub{color:var(--ash);font-size:14px;line-height:1.7;margin-bottom:28px;}
+.mm-avatars{display:flex;justify-content:center;gap:16px;margin-bottom:28px;}
+.mm-av{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;border:3px solid var(--gold);background:linear-gradient(135deg,var(--lift),var(--lift2));}
+.mm-vs{font-family:'Playfair Display',serif;font-size:28px;color:var(--gold);font-style:italic;align-self:center;}
+
+@media(max-width:1000px){
+  #topnav{padding:14px 20px;}
+  #s-matches,#s-date,#s-premium,#s-profile,#s-liked{padding:80px 20px 60px;}
+  .plans-grid{grid-template-columns:1fr;}
+  .date-lay{grid-template-columns:1fr;}
+  .dp-panel{position:static;}
+  .profile-lay{grid-template-columns:1fr;}
+  .prof-sidebar{position:static;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:640px){
+  .m-grid{grid-template-columns:repeat(2,1fr);}
+  .stg{grid-template-columns:repeat(2,1fr);}
+  .dchips{grid-template-columns:1fr 1fr;}
+  .pf-grid{grid-template-columns:1fr;}
+  .matches-hd{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div><div id="cur-r"></div>
+<div id="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div></div>
+<div id="grain"></div>
+<div id="toast-wrap"></div>
+
+<!-- ══ MODALS ══ -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal" id="modal-inner" style="position:relative;"></div>
+</div>
+
+<!-- ══ TOP NAV ══ -->
+<nav id="topnav">
+  <div class="tn-logo" onclick="nav('s-land')">Amoré</div>
+  <div class="tn-center">
+    <button class="tn-tab" id="t-swipe" onclick="nav('s-swipe')">✦ Entdecken</button>
+    <button class="tn-tab" id="t-liked" onclick="nav('s-liked')">♥ Likes</button>
+    <button class="tn-tab" id="t-matches" onclick="nav('s-matches')">Matches <span class="tn-badge" id="match-badge" style="display:none"></span></button>
+    <button class="tn-tab" id="t-chat" onclick="nav('s-chat')">💬 Chat</button>
+    <button class="tn-tab" id="t-premium" onclick="nav('s-premium')">✦ Premium</button>
+  </div>
+  <div class="tn-right">
+    <div class="tn-avatar" id="tn-av" onclick="nav('s-profile')">👤</div>
+  </div>
+</nav>
+
+<!-- ══════════════════════
+     LANDING
+══════════════════════ -->
+<div id="s-land" class="screen active">
+  <div class="pill">✦ KI-Dating der nächsten Generation</div>
+  <h1 class="land-title serif">Deine <em>große<br>Liebe</em> wartet</h1>
+  <p class="land-sub">Amoré kombiniert tiefe Persönlichkeitsanalyse mit echter KI — und schlägt dir automatisch das perfekte erste Date vor. Ort. Aktivität. Gesprächsstarter. Alles.</p>
+  <div class="land-feats">
+    <div class="lf">🔒 Verifizierte Profile</div>
+    <div class="lf">✦ KI-Kompatibilitätsanalyse</div>
+    <div class="lf">🗓 Automatische Date-Planung</div>
+    <div class="lf">💬 Integrierter Chat mit KI</div>
+    <div class="lf">🛡 Sicherheits-Reporting</div>
+  </div>
+  <div class="land-ctas">
+    <button class="btn btn-gold" onclick="startOnboarding()" style="padding:16px 48px;font-size:13px;">Kostenlos starten</button>
+    <button class="btn btn-ghost" onclick="quickDemo()" style="font-size:13px;">Demo ansehen →</button>
+  </div>
+  <div class="land-stats">
+    <div class="stat"><span class="sn">2.4M</span><div class="sl">Mitglieder</div></div>
+    <div class="stat"><span class="sn">97K</span><div class="sl">Paare gebildet</div></div>
+    <div class="stat"><span class="sn">94%</span><div class="sl">Zufriedenheit</div></div>
+    <div class="stat"><span class="sn">4.9★</span><div class="sl">App-Bewertung</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     ONBOARDING
+══════════════════════ -->
+<div id="s-onboard" class="screen">
+  <div class="onb-wrap">
+    <div class="prog-bar" id="prog-bar"></div>
+    <div class="onb-step-lbl" id="onb-lbl"></div>
+    <div class="onb-h serif" id="onb-h"></div>
+    <div class="onb-s" id="onb-s"></div>
+    <div class="ostep act" id="os1">
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Avatar wählen</div>
+        <div class="av-row" id="av-row"></div>
+      </div>
+      <div class="gr2">
+        <div class="field"><label>Vorname</label><input id="fn" value="Mia" placeholder="Dein Name"></div>
+        <div class="field"><label>Alter</label><input id="fa" type="number" value="27" min="18" max="99"></div>
+      </div>
+      <div class="gr2">
+        <div class="field"><label>Stadt</label><input id="fc" value="Zürich" placeholder="Deine Stadt"></div>
+        <div class="field"><label>Ich suche</label><select id="fs"><option>Eine Frau</option><option selected>Einen Mann</option><option>Alle</option></select></div>
+      </div>
+      <div class="gr1"><div class="field"><label>Über dich</label><textarea id="fb" placeholder="Ein Satz — wer bist du?">Ich liebe Berge, frischen Kaffee und Gespräche, die bis in die Nacht gehen.</textarea></div></div>
+    </div>
+    <div class="ostep" id="os2"><div class="quiz-q serif" id="qtext" style="font-size:18px;margin-bottom:22px;"></div><div class="qopts" id="qopts"></div></div>
+    <div class="ostep" id="os3"><div class="int-wrap" id="int-wrap"></div></div>
+    <div class="ostep" id="os4"><div class="dpref-g" id="dpref-g"></div></div>
+    <div class="onb-nav">
+      <button class="onb-bk" id="onb-bk" onclick="prevStep()">← Zurück</button>
+      <button class="btn btn-gold btn-sm" id="onb-next" onclick="nextStep()">Weiter →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     SWIPE
+══════════════════════ -->
+<div id="s-swipe" class="screen">
+  <div class="swipe-top">
+    <div class="swipe-title serif">Entdecken</div>
+    <div class="swipe-limits">
+      <div class="limit-pill" id="likes-pill">♥ <span id="likes-left">10</span> Likes</div>
+      <div class="limit-pill" id="stars-pill">★ <span id="stars-left">1</span> Super</div>
+    </div>
+  </div>
+  <div class="deck-wrap" id="deck-wrap"></div>
+  <div class="deck-btns">
+    <button class="db db-rewind" onclick="rewindCard()" title="Rückgängig (Gold+)">↩</button>
+    <button class="db db-pass" onclick="swipe('left')" title="Pass">✕</button>
+    <button class="db db-like" onclick="swipe('right')" title="Like">♥</button>
+    <button class="db db-star" onclick="superLike()" title="Super Like">★</button>
+    <button class="db db-boost" onclick="openBoost()" title="Boost">⚡</button>
+  </div>
+  <div class="swipe-meta" id="swipe-meta"></div>
+</div>
+
+<!-- ══════════════════════
+     MATCHES
+══════════════════════ -->
+<div id="s-matches" class="screen">
+  <div class="matches-hd fi">
+    <div><h2 class="serif">Deine <em>Matches</em></h2><div class="mhd-sub" id="mhd-sub">Wähle ein Match für KI-Date-Planung</div></div>
+    <div class="mfil">
+      <button class="mfb act" onclick="filterM(this,'all')">Alle</button>
+      <button class="mfb" onclick="filterM(this,'natur')">Natur</button>
+      <button class="mfb" onclick="filterM(this,'kunst')">Kultur</button>
+      <button class="mfb" onclick="filterM(this,'genuss')">Genuss</button>
+    </div>
+  </div>
+  <div class="m-grid" id="m-grid"></div>
+</div>
+
+<!-- ══════════════════════
+     AI DATE
+══════════════════════ -->
+<div id="s-date" class="screen">
+  <button class="date-back" onclick="nav('s-matches')">← Zurück</button>
+  <div class="date-lay">
+    <div class="dp-panel fi" id="dp-panel"></div>
+    <div class="ai-col">
+      <div class="ai-box fi">
+        <div class="ai-box-head">
+          <div class="ai-ico">✦</div>
+          <div><div class="ai-box-title serif">KI Date-Planer</div><div class="ai-box-sub">Dein personalisiertes Date-Konzept in Sekunden</div></div>
+        </div>
+        <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:11px;">Date-Stil wählen</div>
+        <div class="stg" id="stg"></div>
+        <div class="pref-row">
+          <div class="ps2"><label>Budget</label>
+            <select id="p-bgt"><option>Entspannt (bis 30€)</option><option selected>Mittel (30–80€)</option><option>Gehoben (80–150€)</option><option>Luxus (150€+)</option></select>
+          </div>
+          <div class="ps2"><label>Tageszeit</label>
+            <select id="p-tod"><option>Morgens</option><option>Mittags</option><option selected>Nachmittags</option><option>Abends</option><option>Nachts</option></select>
+          </div>
+        </div>
+        <div class="ps2" style="margin-bottom:16px;"><label>Besondere Wünsche (optional)</label>
+          <input id="p-wish" placeholder="z.B. Kein Sport, mag Hunde…" style="background:var(--lift);border:1px solid var(--border);border-radius:12px;color:var(--cream);font-size:13px;padding:10px 13px;outline:none;transition:border-color .3s;width:100%;">
+        </div>
+        <button class="btn-gen" id="btn-gen" onclick="genDate()"><span style="font-size:18px;">✦</span> KI-Date für uns planen</button>
+      </div>
+      <div class="ai-load" id="ai-load">
+        <div class="load-ring"></div>
+        <div class="load-txt">KI analysiert eure Profile…</div>
+        <div class="lsteps" id="lsteps"></div>
+      </div>
+      <div class="ai-res" id="ai-res">
+        <div id="res-content"></div>
+        <div class="res-acts">
+          <button class="btn btn-gold" onclick="acceptDate()">Date annehmen ♥</button>
+          <button class="btn btn-ghost" onclick="genDate()">Neu generieren ↺</button>
+          <button class="btn btn-ghost" onclick="shareDate()" style="padding:14px 20px;">↗ Teilen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     CHAT
+══════════════════════ -->
+<div id="s-chat" class="screen">
+  <div class="chat-wrap">
+    <button class="date-back" style="margin-bottom:20px;" onclick="nav('s-matches')">← Zurück</button>
+    <div class="ch-hd">
+      <div class="ch-av" id="ch-av"><div class="ch-av-dot"></div></div>
+      <div><div class="ch-nm serif" id="ch-nm"></div><div class="ch-st">● Online jetzt</div></div>
+      <div class="ch-acts">
+        <button class="btn-icon" style="font-size:14px;" onclick="toast('📞 Anruffunktion kommt in der App!')" title="Anruf">📞</button>
+        <button class="btn-icon" style="font-size:14px;" onclick="toast('🎥 Video-Dating demnächst!')" title="Video">🎥</button>
+        <button class="btn-icon" style="font-size:14px;" onclick="nav('s-date')" title="Date planen">🗓</button>
+      </div>
+    </div>
+    <div class="ch-body" id="ch-body"></div>
+    <div class="ch-input-row">
+      <input class="ch-input" id="ch-input" placeholder="Nachricht schreiben…" onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="ch-send" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     WHO LIKED YOU
+══════════════════════ -->
+<div id="s-liked" class="screen">
+  <div class="liked-hd fi">
+    <h2 class="serif">Wer hat dich <em style="color:var(--rose);">geliked</em>?</h2>
+    <p>Diese Personen finden dich interessant — match zurück, um zu schreiben.</p>
+  </div>
+  <div class="liked-grid fi" id="liked-grid"></div>
+  <div class="liked-cta fi" id="liked-cta" style="display:none;">
+    <div style="font-size:36px;">🔓</div>
+    <div class="liked-cta-text">
+      <h3 class="serif">Sehe alle, die dich mögen</h3>
+      <p>Mit <strong style="color:var(--gold);">Gold oder Platin</strong> siehst du alle Profile die dich bereits geliked haben — und matchst sofort zurück.</p>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="nav('s-premium')">Upgrade ansehen →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     PREMIUM
+══════════════════════ -->
+<div id="s-premium" class="screen">
+  <div class="prem-hd fi">
+    <div class="pill" style="margin-bottom:20px;">✦ Upgrade deine Erfahrung</div>
+    <h2 class="serif">Finde die Liebe<br><em>ohne Kompromisse</em></h2>
+    <p>Wähle deinen Plan. Keine versteckten Kosten, jederzeit kündbar.</p>
+  </div>
+  <div style="text-align:center;margin-bottom:0;">
+    <div class="bill-toggle">
+      <button class="bt-opt act" id="bt-monthly" onclick="setBilling('monthly')">Monatlich</button>
+      <button class="bt-opt" id="bt-yearly" onclick="setBilling('yearly')">Jährlich <span class="bt-save">−40%</span></button>
+    </div>
+  </div>
+  <div class="plans-grid fi" id="plans-grid"></div>
+  <div class="addons-section fi">
+    <div class="addons-title serif">Einzelne Features kaufen</div>
+    <div class="addons-grid" id="addons-grid"></div>
+  </div>
+  <div class="guarantee fi">
+    <div class="gu-icon">🛡</div>
+    <div class="gu-text">
+      <h4>14-Tage Rückgabegarantie</h4>
+      <p>Nicht zufrieden? Kein Problem. Wir erstatten den vollen Betrag innerhalb von 14 Tagen — keine Fragen gestellt.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     PROFILE / SETTINGS
+══════════════════════ -->
+<div id="s-profile" class="screen">
+  <div class="profile-lay">
+    <div class="prof-sidebar fi">
+      <div class="prof-av-big" id="prof-av-big">👤</div>
+      <div class="prof-nm serif" id="prof-nm">Mia</div>
+      <div class="prof-loc" id="prof-loc">📍 Zürich</div>
+      <div class="prof-tier"><div class="tier-pill tier-free" id="tier-pill">✦ Basis</div></div>
+      <div class="prof-nav">
+        <button class="pn-item act" onclick="showProfTab('edit',this)"><span class="pn-i">✏️</span> Profil bearbeiten</button>
+        <button class="pn-item" onclick="showProfTab('stats',this)"><span class="pn-i">📊</span> Statistiken</button>
+        <button class="pn-item" onclick="showProfTab('settings',this)"><span class="pn-i">⚙️</span> Einstellungen</button>
+        <button class="pn-item" onclick="showProfTab('notif',this)"><span class="pn-i">🔔</span> Benachrichtigungen</button>
+        <button class="pn-item" onclick="showProfTab('safety',this)"><span class="pn-i">🛡</span> Sicherheit & Privatsphäre</button>
+        <button class="pn-item" onclick="nav('s-premium')"><span class="pn-i">✦</span> Upgrade</button>
+        <button class="pn-item" style="color:var(--rose);margin-top:8px;" onclick="showProfTab('delete',this)"><span class="pn-i">🗑</span> Account</button>
+      </div>
+    </div>
+    <div class="prof-main">
+      <!-- Edit Profile -->
+      <div class="prof-section act" id="ps-edit">
+        <div class="ps-title serif">Profil bearbeiten</div>
+        <div class="ps-sub">Dein Profil bestimmt, wer dich sieht — halte es aktuell.</div>
+        <div class="pf-grid"><div class="field"><label>Vorname</label><input id="pe-name" value="Mia"></div><div class="field"><label>Alter</label><input type="number" id="pe-age" value="27"></div></div>
+        <div class="pf-grid"><div class="field"><label>Stadt</label><input id="pe-city" value="Zürich"></div><div class="field"><label>Beruf</label><input id="pe-job" placeholder="z.B. Designer" value="UX Designerin"></div></div>
+        <div class="pf-grid one"><div class="field"><label>Bio</label><textarea id="pe-bio">Ich liebe Berge, frischen Kaffee und Gespräche, die bis in die Nacht gehen.</textarea></div></div>
+        <div class="pf-grid">
+          <div class="field"><label>Körpergröße</label><select id="pe-height"><option>Keine Angabe</option><option>unter 160cm</option><option selected>160–170cm</option><option>170–180cm</option><option>über 180cm</option></select></div>
+          <div class="field"><label>Beziehungstyp</label><select id="pe-rel"><option selected>Feste Beziehung</option><option>Casual Dating</option><option>Freundschaft</option><option>Offen für alles</option></select></div>
+        </div>
+        <div class="pf-grid">
+          <div class="field"><label>Kinder</label><select><option selected>Keine Kinder</option><option>Habe Kinder</option><option>Möchte Kinder</option></select></div>
+          <div class="field"><label>Raucher</label><select><option selected>Nein</option><option>Gelegentlich</option><option>Ja</option></select></div>
+        </div>
+        <div style="margin-top:6px;"><button class="btn btn-gold btn-sm" onclick="saveProfile()">Änderungen speichern</button></div>
+      </div>
+      <!-- Stats -->
+      <div class="prof-section" id="ps-stats">
+        <div class="ps-title serif">Deine Statistiken</div>
+        <div class="ps-sub">Wie du auf Amoré performst diese Woche.</div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="sb-n">247</div><div class="sb-l">Profilaufrufe</div></div>
+          <div class="stat-box"><div class="sb-n" style="color:var(--rose);">18</div><div class="sb-l">Likes erhalten</div></div>
+          <div class="stat-box"><div class="sb-n" style="color:var(--gold);">5</div><div class="sb-l">Matches</div></div>
+          <div class="stat-box"><div class="sb-n" style="color:var(--teal);">3</div><div class="sb-l">Chats aktiv</div></div>
+        </div>
+        <div style="background:var(--lift);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;">
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Profil-Attraktivität</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span>Foto-Qualität</span><span style="color:var(--gold);">72%</span></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:3px;"><div style="height:100%;width:72%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span>Bio-Vollständigkeit</span><span style="color:var(--teal);">88%</span></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:3px;"><div style="height:100%;width:88%;background:linear-gradient(90deg,var(--teal),var(--teal2));border-radius:3px;"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;"><span>Aktivität</span><span style="color:var(--blush);">61%</span></div><div style="height:3px;background:rgba(255,255,255,.06);border-radius:3px;"><div style="height:100%;width:61%;background:linear-gradient(90deg,var(--rose),var(--blush));border-radius:3px;"></div></div></div>
+          </div>
+        </div>
+        <div style="background:rgba(201,169,110,.05);border:1px solid var(--border-hi);border-radius:14px;padding:16px 18px;">
+          <div style="font-size:13px;color:var(--gold);margin-bottom:6px;">💡 KI-Empfehlung</div>
+          <div style="font-size:13px;color:var(--ash);line-height:1.6;">Füge ein Aktiv-Foto hinzu und ergänze deine Bio mit einem Gesprächsstarter — das kann deine Match-Rate um bis zu 40% steigern.</div>
+        </div>
+      </div>
+      <!-- Settings -->
+      <div class="prof-section" id="ps-settings">
+        <div class="ps-title serif">Einstellungen</div>
+        <div class="ps-sub">Passe Amoré an deine Bedürfnisse an.</div>
+        <div class="toggle-row">
+          <div class="tr-left"><div class="tr-label">Entdecken aktiv</div><div class="tr-sub">Dein Profil wird anderen angezeigt</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="tr-left"><div class="tr-label">Incognito-Modus</div><div class="tr-sub">Nur Personen die du geliked hast, sehen dich</div><div class="tr-prem">✦ Gold erforderlich</div></div>
+          <div class="toggle" onclick="checkPrem(this,'gold')"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="tr-left"><div class="tr-label">Passport — Ort ändern</div><div class="tr-sub">Entdecke Profile in anderen Städten</div><div class="tr-prem" style="color:var(--plat);">★ Platin erforderlich</div></div>
+          <div class="toggle" onclick="checkPrem(this,'plat')"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="tr-left"><div class="tr-label">Lesebestätigungen</div><div class="tr-sub">Sehe wann deine Nachrichten gelesen wurden</div><div class="tr-prem" style="color:var(--plat);">★ Platin erforderlich</div></div>
+          <div class="toggle" onclick="checkPrem(this,'plat')"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="tr-left"><div class="tr-label">KI-Date-Planer</div><div class="tr-sub">Unbegrenzte KI-Date-Vorschläge</div><div class="tr-prem" style="color:var(--plat);">★ Platin — unbegrenzt</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div style="margin-top:20px;"><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Suchfilter</div>
+          <div class="pf-grid">
+            <div class="field"><label>Altersbereich</label><select><option>18–25</option><option selected>25–35</option><option>35–45</option><option>45+</option><option>Egal</option></select></div>
+            <div class="field"><label>Umkreis</label><select><option>10 km</option><option selected>25 km</option><option>50 km</option><option>Schweizweit</option><option>Weltweit (Platin)</option></select></div>
+          </div>
+        </div>
+      </div>
+      <!-- Notifications -->
+      <div class="prof-section" id="ps-notif">
+        <div class="ps-title serif">Benachrichtigungen</div>
+        <div class="ps-sub">Bleib auf dem Laufenden ohne überwältigt zu werden.</div>
+        <div class="notif-item"><div><div class="ni-label">Neue Matches</div><div class="ni-sub">Sofort benachrichtigt werden</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="notif-item"><div><div class="ni-label">Neue Nachrichten</div><div class="ni-sub">Bei jeder neuen Chat-Nachricht</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="notif-item"><div><div class="ni-label">Neue Likes</div><div class="ni-sub">Wenn jemand dein Profil liked</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="notif-item"><div><div class="ni-label">KI-Match-Empfehlungen</div><div class="ni-sub">Täglich neue kuratierte Vorschläge</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="notif-item"><div><div class="ni-label">Angebote & News</div><div class="ni-sub">Aktionen und neue Features</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <!-- Safety -->
+      <div class="prof-section" id="ps-safety">
+        <div class="ps-title serif">Sicherheit & Privatsphäre</div>
+        <div class="ps-sub">Deine Sicherheit ist uns das Wichtigste.</div>
+        <div class="safety-card"><div class="sc2-title">✓ Profil verifiziert</div><div class="sc2-desc">Dein Konto wurde erfolgreich per Foto-Verifikation bestätigt. Andere sehen das Verifizierungs-Abzeichen auf deinem Profil.</div></div>
+        <div class="safety-card" style="margin-bottom:20px;"><div class="sc2-title">🔒 Datenschutz</div><div class="sc2-desc">Deine Daten werden niemals an Dritte verkauft. Wir nutzen Ende-zu-Ende-Verschlüsselung für alle Nachrichten.</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;gap:10px;" onclick="toast('📄 Datenschutzrichtlinie wird geöffnet…')">📄 Datenschutzrichtlinie lesen</button>
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;gap:10px;" onclick="openBlockModal()">🚫 Blockierte Nutzer verwalten</button>
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;gap:10px;" onclick="toast('📋 Report-Formular geöffnet')">🚨 Nutzer melden</button>
+        </div>
+        <div class="danger-zone">
+          <div class="dz-title">Gefahrenzone</div>
+          <div class="dz-desc">Das Löschen deines Accounts ist unwiderruflich. Alle Matches, Nachrichten und Daten werden permanent gelöscht.</div>
+          <button class="btn btn-sm" style="background:rgba(212,96,122,.12);border:1px solid rgba(212,96,122,.3);color:var(--rose);" onclick="toast('⚠️ Bitte kontaktiere den Support für Kontolöschung')">Account löschen</button>
+        </div>
+      </div>
+      <!-- Delete placeholder -->
+      <div class="prof-section" id="ps-delete"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CURSOR
+// ═══════════════════════════════════════════
+const cur=document.getElementById('cur'),curR=document.getElementById('cur-r');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.left=mx+'px';cur.style.top=my+'px';
+});
+(function rL(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;curR.style.left=rx+'px';curR.style.top=ry+'px';requestAnimationFrame(rL);})();
+window.addEventListener('scroll',()=>document.getElementById('topnav').classList.toggle('solid',scrollY>30));
+
+// ═══════════════════════════════════════════
+// FADE OBSERVER
+// ═══════════════════════════════════════════
+const fObs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('v');}),{threshold:.08});
+function observeFi(){document.querySelectorAll('.fi').forEach(el=>fObs.observe(el));}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S={
+  user:{name:'Mia',age:27,city:'Zürich',bio:'Ich liebe Berge, frischen Kaffee und Gespräche, die bis in die Nacht gehen.',avatar:'👩',interests:[],prefs:[],personality:[]},
+  plan:'free', // free | gold | plat
+  billing:'monthly',
+  liked:[],
+  superLiked:[],
+  passed:[],
+  lastPassed:null,
+  swipeIdx:0,
+  likesLeft:10,
+  starsLeft:1,
+  boostActive:false,
+  currentMatch:null,
+  currentResult:null,
+  onbStep:1,
+  quizStep:0,
+  selectedStyle:'Romantisch & Intim',
+};
+
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const AVATARS=['👩','🧑‍🎤','👩‍🦱','👩‍🦰','🧑','👱‍♀️','🧕','👩‍🔬'];
+const INTERESTS=[
+  {e:'🏔',l:'Wandern'},{e:'🎨',l:'Kunst'},{e:'🍷',l:'Wein'},{e:'📚',l:'Lesen'},
+  {e:'🌍',l:'Reisen'},{e:'🎵',l:'Musik'},{e:'🧘',l:'Yoga'},{e:'🍳',l:'Kochen'},
+  {e:'📸',l:'Fotografie'},{e:'🎭',l:'Theater'},{e:'🚴',l:'Radfahren'},{e:'🌱',l:'Natur'},
+  {e:'🎬',l:'Kino'},{e:'💃',l:'Tanzen'},{e:'☕',l:'Kaffee'},{e:'🏊',l:'Schwimmen'},
+  {e:'🦋',l:'Meditation'},{e:'🏛',l:'Architektur'},{e:'🎮',l:'Gaming'},{e:'🌿',l:'Botanik'}
+];
+const DPREFS=[
+  {e:'🌄',l:'Draußen & Natur',d:'Parks, Berge, Wasser'},
+  {e:'🏙',l:'Stadtabenteuer',d:'Restaurants, Bars, Kultur'},
+  {e:'🎨',l:'Kreativ & Kulturell',d:'Museen, Galerien, Konzerte'},
+  {e:'🤸',l:'Aktiv & Sport',d:'Klettern, Bike, Yoga'},
+  {e:'🛋',l:'Gemütlich & Intim',d:'Homey, Café, Cozy'},
+  {e:'⚡',l:'Spontan & Wild',d:'Überrasch mich!'}
+];
+const QUIZ=[
+  {q:'Was beschreibt dich am Wochenende?',opts:[{e:'🏔',l:'Draußen aktiv',s:'Abenteuerlich'},{e:'📚',l:'Zu Hause lesen',s:'Introvertiert'},{e:'🎉',l:'Mit Freunden feiern',s:'Gesellig'},{e:'🎨',l:'Kreativ sein',s:'Kreativ'}]},
+  {q:'Beim perfekten Date ist dir wichtig…',opts:[{e:'💬',l:'Tiefe Gespräche',s:'Intellektuell'},{e:'😂',l:'Viel Lachen',s:'Humorvoll'},{e:'✨',l:'Überraschungen',s:'Spontan'},{e:'🕯',l:'Romantik',s:'Romantisch'}]},
+  {q:'Deine Freunde würden dich beschreiben als…',opts:[{e:'🌟',l:'Voller Energie',s:'Extrovertiert'},{e:'🌿',l:'Ruhig & nachdenklich',s:'Reflektiert'},{e:'🤗',l:'Warmherzig',s:'Empathisch'},{e:'🎯',l:'Zielorientiert',s:'Ambitioniert'}]}
+];
+const PROFILES=[
+  {id:1,name:'Lena',age:26,city:'Zürich',emoji:'👩',bg:'linear-gradient(160deg,#150f2d,#2a1040,#0f1529)',interests:['Kunst','Reisen','Wein','Fotografie'],bio:'Designerin mit Leidenschaft für Sonnenuntergänge, Rotwein und Gassen die nirgendwo hinführen.',compat:94,badge:'Verifiziert',online:true,cat:'kunst',char:'nachdenklich, kreativ, offen für Abenteuer',style:'Romantisch & Intim'},
+  {id:2,name:'Sophia',age:29,city:'Bern',emoji:'👩‍🦱',bg:'linear-gradient(160deg,#0f2010,#1a3520,#101f10)',interests:['Wandern','Kochen','Natur','Yoga'],bio:'Bergführerin & Hobbyköchin. Liebt Morgenläufe, frischen Kaffee und ehrliche Gespräche.',compat:88,badge:'Premium',online:false,cat:'natur',char:'energetisch, bodenständig, humorvoll',style:'Abenteuerlich & Aktiv'},
+  {id:3,name:'Emma',age:31,city:'Basel',emoji:'🧑‍🎤',bg:'linear-gradient(160deg,#2a0f0f,#3d1020,#1a0f1a)',interests:['Musik','Kino','Tanzen','Lesen'],bio:'Schreibt Kurzgeschichten bei Tag und tanzt Salsa bei Nacht.',compat:82,badge:'Neu',online:true,cat:'kunst',char:'leidenschaftlich, spontan, tiefgründig',style:'Kulturell & Kreativ'},
+  {id:4,name:'Julian',age:33,city:'Luzern',emoji:'👨',bg:'linear-gradient(160deg,#0f1a2a,#102035,#0a1520)',interests:['Architektur','Kino','Kochen','Reisen'],bio:'Architekt mit Sinn für Ästhetik. Kocht gerne für andere und entdeckt neue Städte.',compat:91,badge:'',online:true,cat:'genuss',char:'ruhig, ästhetisch, großzügig',style:'Kulinarisch & Genussvoll'},
+  {id:5,name:'Felix',age:28,city:'Zürich',emoji:'🧑',bg:'linear-gradient(160deg,#1a1a10,#2a2815,#15130a)',interests:['Sport','Natur','Musik','Kaffee'],bio:'Software-Entwickler, der am Wochenende die Alpen erkundet.',compat:79,badge:'Verifiziert',online:false,cat:'natur',char:'abenteuerlustig, entspannt, neugierig',style:'Abenteuerlich & Aktiv'},
+  {id:6,name:'Sara',age:25,city:'Winterthur',emoji:'👧',bg:'linear-gradient(160deg,#1a0f2a,#2a1040,#15102a)',interests:['Yoga','Meditation','Kunst','Reisen'],bio:'Yogalehrerin auf der Suche nach echten Momenten.',compat:85,badge:'Neu',online:true,cat:'kunst',char:'achtsam, warmherzig, neugierig',style:'Romantisch & Intim'},
+  {id:7,name:'Marc',age:30,city:'Genf',emoji:'🧑‍💼',bg:'linear-gradient(160deg,#0a1020,#151f30,#0a0f1a)',interests:['Wein','Reisen','Fotografie','Kaffee'],bio:'Produktmanager & Weinliebhaber. Entdeckt gerne neue Orte mit interessanten Menschen.',compat:76,badge:'',online:true,cat:'genuss',char:'offen, kommunikativ, weltoffen',style:'Kulinarisch & Genussvoll'},
+  {id:8,name:'Nina',age:27,city:'Zürich',emoji:'👩‍🔬',bg:'linear-gradient(160deg,#1a1020,#2d1535,#1a0d1a)',interests:['Kino','Lesen','Botanik','Wandern'],bio:'Biologin, Bücherwurm und Kinofan. Liebt Gespräche über Wissenschaft und das Leben.',compat:87,badge:'Verifiziert',online:false,cat:'natur',char:'intellektuell, neugierig, warmherzig',style:'Kulturell & Kreativ'}
+];
+const DATE_STYLES=[
+  {e:'🕯',l:'Romantisch & Intim',d:'Sanft & persönlich'},
+  {e:'🏔',l:'Abenteuerlich & Aktiv',d:'Draußen & aufregend'},
+  {e:'🎨',l:'Kulturell & Kreativ',d:'Kunst & Inspiration'},
+  {e:'⚡',l:'Spontan & Locker',d:'Easy & überraschend'},
+  {e:'🍷',l:'Kulinarisch & Genussvoll',d:'Essen & Trinken'},
+  {e:'🌿',l:'Entspannt & Naturnah',d:'Parks & Stille'}
+];
+const PLANS_DATA=[
+  {key:'free',name:'Basis',icon:'🌸',desc:'Perfekt zum Kennenlernen der App.',price:{monthly:'Kostenlos',yearly:'Kostenlos'},col:'cream',
+   feats:['10 Likes täglich','1 Super Like täglich','5 Matches gleichzeitig','KI-Date-Planer (3x/Woche)','Basis-Suchfilter'],
+   noFeats:['Unbegrenzte Likes','Wer hat dich geliked?','Rewind','Boost','Passport','Incognito','Lesebestätigungen']},
+  {key:'gold',name:'Gold',icon:'✦',desc:'Für alle, die es ernst meinen.',price:{monthly:'9,99€',yearly:'5,99€'},col:'gold',popular:true,
+   feats:['Unbegrenzte Likes','5 Super Likes täglich','Wer hat dich geliked?','Rewind — Swipe rückgängig','1 Boost pro Monat','KI-Date-Planer (unbegrenzt)','Incognito-Modus','Erweiterte Suchfilter'],
+   noFeats:['Passport','Lesebestätigungen','Prioritäts-Matching']},
+  {key:'plat',name:'Platin',icon:'★',desc:'Das komplette Erlebnis ohne Grenzen.',price:{monthly:'19,99€',yearly:'11,99€'},col:'plat',plat:true,
+   feats:['Alles aus Gold','Passport — weltweit suchen','Lesebestätigungen im Chat','Prioritäts-Matching (3x mehr Sichtbarkeit)','5 Boosts pro Monat','Exklusive KI-Persönlichkeitsanalyse','Rose täglich senden','Kein Werbung, nie'],
+   noFeats:[]}
+];
+const ADDONS=[
+  {icon:'⚡',name:'Boost × 1',desc:'30 Min. Topposition in deiner Region. Bis zu 10× mehr Profil-Aufrufe.',price:'2,99€'},
+  {icon:'⚡',name:'Boost × 5',desc:'5 Boosts für die ganze Woche. Perfekt für aktive Wochen.',price:'9,99€'},
+  {icon:'★',name:'Super Likes × 5',desc:'Zeige besonderen Personen, dass du es wirklich meinst.',price:'3,49€'},
+  {icon:'🌹',name:'Rose × 10',desc:'Schicke jemandem eine Rose — noch stärker als ein Like.',price:'4,99€'},
+  {icon:'↩',name:'Rewind × 3',desc:'Hast du versehentlich gepasst? Drei Chancen zurückzuspulen.',price:'1,99€'},
+  {icon:'👁',name:'Profilansichten',desc:'Sieh die letzten 20 Personen, die dein Profil besucht haben.',price:'4,99€'},
+];
+const LIKED_FAKE=[
+  {emoji:'👩‍🦰',name:'Lara M.',meta:'28 · Zürich'},
+  {emoji:'🧑',name:'Max K.',meta:'31 · Bern'},
+  {emoji:'👩',name:'Julia S.',meta:'26 · Basel'},
+  {emoji:'👨',name:'Tim R.',meta:'34 · Luzern'},
+  {emoji:'👩‍🦱',name:'Anna L.',meta:'29 · Zürich'},
+  {emoji:'🧑‍💼',name:'Sandro B.',meta:'32 · Winterthur'},
+];
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function nav(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  // update tabs
+  const tabMap={
+    's-swipe':'t-swipe','s-liked':'t-liked','s-matches':'t-matches',
+    's-chat':'t-chat','s-premium':'t-premium'
+  };
+  const shown=!['s-land'].includes(id);
+  ['t-swipe','t-liked','t-matches','t-chat','t-premium'].forEach(t=>{
+    const el=document.getElementById(t);
+    el.classList.toggle('vis',shown);
+    el.classList.remove('act');
+  });
+  if(tabMap[id])document.getElementById(tabMap[id]).classList.add('act');
+  document.getElementById('topnav').classList.toggle('solid',id!=='s-land');
+  observeFi();
+  // special inits
+  if(id==='s-matches')renderMatches();
+  if(id==='s-liked')renderLiked();
+  if(id==='s-premium')renderPremium();
+  if(id==='s-profile')updateProfileUI();
+}
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function openModal(html){
+  document.getElementById('modal-inner').innerHTML=`<button class="modal-close" onclick="closeModal()">✕</button>`+html;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-bg'))
+    document.getElementById('modal-bg').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// ONBOARDING
+// ═══════════════════════════════════════════
+const ONB=[
+  {lbl:'Schritt 1 von 4',h:'Erzähl uns von dir',s:'Dein Profil ist die Basis für personalisierte Matches.'},
+  {lbl:'Schritt 2 von 4',h:'Deine Persönlichkeit',s:'Wir analysieren deinen Charakter für bessere Kompatibilität.'},
+  {lbl:'Schritt 3 von 4',h:'Was liebst du?',s:'Wähle mindestens 3 Interessen.'},
+  {lbl:'Schritt 4 von 4',h:'Dein perfektes Date',s:'Wie magst du Dating am liebsten?'},
+];
+function buildOnb(){
+  // avatars
+  const ar=document.getElementById('av-row');
+  AVATARS.forEach(a=>{const d=document.createElement('div');d.className='av';d.textContent=a;if(a===S.user.avatar)d.classList.add('sel');d.onclick=()=>{ar.querySelectorAll('.av').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');S.user.avatar=a;};ar.appendChild(d);});
+  // interests
+  const iw=document.getElementById('int-wrap');
+  INTERESTS.forEach(i=>{const b=document.createElement('button');b.className='int-b';b.innerHTML=`<span>${i.e}</span>${i.l}`;b.onclick=()=>{b.classList.toggle('sel');S.user.interests=Array.from(iw.querySelectorAll('.sel')).map(x=>x.textContent.trim());};iw.appendChild(b);});
+  // date prefs
+  const dg=document.getElementById('dpref-g');
+  DPREFS.forEach(p=>{const d=document.createElement('div');d.className='dpref';d.innerHTML=`<div class="dp-i">${p.e}</div><div class="dp-l">${p.l}</div><div class="dp-d">${p.d}</div>`;d.onclick=()=>{d.classList.toggle('sel');S.user.prefs=Array.from(dg.querySelectorAll('.sel')).map(x=>x.querySelector('.dp-l').textContent);};dg.appendChild(d);});
+  buildQuiz(0);
+  updOnb();
+}
+let qsi=0;
+function buildQuiz(idx){
+  if(idx>=QUIZ.length)return;
+  const q=QUIZ[idx];
+  document.getElementById('qtext').textContent=q.q;
+  const oo=document.getElementById('qopts');oo.innerHTML='';
+  q.opts.forEach(o=>{const d=document.createElement('div');d.className='qopt';d.innerHTML=`<div class="qe">${o.e}</div><div class="ql">${o.l}</div><div class="qs">${o.s}</div>`;d.onclick=()=>{oo.querySelectorAll('.qopt').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');S.user.personality[idx]=o.s;};oo.appendChild(d);});
+}
+function updOnb(){
+  const m=ONB[S.onbStep-1];
+  document.getElementById('onb-lbl').textContent=m.lbl;
+  document.getElementById('onb-h').textContent=m.h;
+  document.getElementById('onb-s').textContent=m.s;
+  ['os1','os2','os3','os4'].forEach((id,i)=>document.getElementById(id).classList.toggle('act',i===S.onbStep-1));
+  document.getElementById('onb-bk').style.opacity=S.onbStep===1?'0':'1';
+  document.getElementById('onb-bk').style.pointerEvents=S.onbStep===1?'none':'auto';
+  document.getElementById('onb-next').textContent=S.onbStep===4?'Matches entdecken ✦':'Weiter →';
+  const pb=document.getElementById('prog-bar');pb.innerHTML='';
+  for(let j=0;j<4;j++){const s=document.createElement('div');s.className='ps';if(j<S.onbStep-1)s.classList.add('done');else if(j===S.onbStep-1)s.classList.add('act');s.innerHTML='<div class="ps-fill"></div>';pb.appendChild(s);}
+  if(S.onbStep===2)buildQuiz(qsi);
+}
+function startOnboarding(){buildOnb();S.onbStep=1;nav('s-onboard');['t-swipe','t-liked','t-matches','t-chat','t-premium'].forEach(t=>document.getElementById(t).classList.add('vis'));}
+function nextStep(){
+  if(S.onbStep===1){S.user.name=document.getElementById('fn').value||'Mia';S.user.age=+document.getElementById('fa').value||27;S.user.city=document.getElementById('fc').value||'Zürich';S.user.bio=document.getElementById('fb').value||'';S.user.seek=document.getElementById('fs').value;}
+  if(S.onbStep<4){S.onbStep++;updOnb();}
+  else{
+    S.liked=[1,4];
+    document.getElementById('tn-av').textContent=S.user.avatar;
+    renderDeck();
+    toast('🎉 Willkommen bei Amoré, '+S.user.name+'!');
+    nav('s-swipe');
+  }
+}
+function prevStep(){if(S.onbStep>1){S.onbStep--;updOnb();}}
+function quickDemo(){S.user.name='Mia';S.user.city='Zürich';S.user.avatar='👩';S.user.interests=['Reisen','Wandern','Kaffee','Kino'];S.liked=[1,4,6];document.getElementById('tn-av').textContent='👩';renderDeck();toast('🚀 Demo gestartet!');nav('s-swipe');['t-swipe','t-liked','t-matches','t-chat','t-premium'].forEach(t=>document.getElementById(t).classList.add('vis'));}
+
+// ═══════════════════════════════════════════
+// SWIPE DECK
+// ═══════════════════════════════════════════
+function renderDeck(){
+  const wrap=document.getElementById('deck-wrap');wrap.innerHTML='';
+  const visible=PROFILES.slice(S.swipeIdx,S.swipeIdx+3);
+  if(!visible.length){wrap.innerHTML=`<div style="width:340px;height:510px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:28px;padding:32px;"><div style="font-size:48px;margin-bottom:16px">🌹</div><div class="serif" style="font-size:22px;margin-bottom:8px">Alle gesehen!</div><p style="color:var(--ash);font-size:13px;line-height:1.7;margin-bottom:22px">Du hast alle Profile von heute gesehen. Schau dir deine Matches an.</p><button class="btn btn-gold btn-sm" onclick="nav('s-matches')">Matches ansehen →</button></div>`;return;}
+  updLimits();
+  visible.slice().reverse().forEach((p,ri)=>{
+    const i=visible.length-1-ri;
+    const card=document.createElement('div');card.className='sc';card.id='sc-'+p.id;
+    card.style.cssText=`transform:scale(${1-i*.04}) translateY(${i*14}px);z-index:${10-i};background:${p.bg};`;
+    card.innerHTML=`<div class="sc-photo" style="background:${p.bg}"><span style="position:relative;z-index:1;font-size:100px">${p.emoji}</span><div class="sc-grad"></div>${p.online?'<div class="sc-online"></div>':''}${p.badge?`<div class="sc-bdg">${p.badge}</div>`:''}<div class="sc-like">LIKE</div><div class="sc-nope">PASS</div><div class="sc-star">★ SUPER</div></div><div class="sc-info"><div class="sc-comp">✦ ${p.compat}% Match</div><div class="sc-name">${p.name}<span class="sc-age">${p.age}</span></div><div class="sc-loc">📍 ${p.city}</div><div class="sc-tags">${p.interests.map(t=>`<span class="sc-tag">${t}</span>`).join('')}</div></div>`;
+    if(i===0)initDrag(card,p);
+    wrap.appendChild(card);
+  });
+  document.getElementById('swipe-meta').textContent=(PROFILES.length-S.swipeIdx)+' Profile verbleibend';
+}
+function initDrag(card,profile){
+  let sx,sy,dx=0,dragging=false;
+  const li=card.querySelector('.sc-like'),no=card.querySelector('.sc-nope'),st=card.querySelector('.sc-star');
+  card.addEventListener('mousedown',e=>{sx=e.clientX;sy=e.clientY;dragging=true;card.style.transition='none';});
+  document.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    dx=e.clientX-sx;const dy=e.clientY-sy;const rot=dx*.06;
+    card.style.transform=`translate(${dx}px,${dy*.25}px) rotate(${rot}deg)`;
+    const p=Math.min(Math.abs(dx)/90,1);
+    if(dx>20){li.style.opacity=p;no.style.opacity=0;st.style.opacity=0;}
+    else if(dx<-20){no.style.opacity=p;li.style.opacity=0;st.style.opacity=0;}
+    else{li.style.opacity=0;no.style.opacity=0;}
+  });
+  document.addEventListener('mouseup',()=>{
+    if(!dragging)return;dragging=false;
+    if(dx>100)swipeCard('right',profile);
+    else if(dx<-100)swipeCard('left',profile);
+    else{card.style.transition='transform .4s cubic-bezier(.2,.8,.3,1)';card.style.transform=`scale(1) translateY(0)`;li.style.opacity=0;no.style.opacity=0;}
+    dx=0;
+  });
+}
+function swipeCard(dir,profile){
+  const p=profile||PROFILES[S.swipeIdx];
+  const card=document.getElementById('sc-'+p.id);
+  if(!card)return;
+  card.classList.add('flying');
+  if(dir==='right'){
+    card.style.transform=`translate(160%,-40px) rotate(28deg)`;card.style.opacity='0';
+    if(S.likesLeft<=0&&S.plan==='free'){toast('❤️ Heute keine Likes mehr — upgrade auf Gold!');card.style.transform='';card.style.opacity='';return;}
+    if(!S.liked.includes(p.id)){S.liked.push(p.id);if(S.plan==='free')S.likesLeft=Math.max(0,S.likesLeft-1);}
+    showMatch(p);
+  } else {
+    card.style.transform=`translate(-160%,-40px) rotate(-28deg)`;card.style.opacity='0';
+    S.lastPassed={idx:S.swipeIdx,profile:p};
+    S.passed.push(p.id);
+  }
+  updLimits();
+  setTimeout(()=>{S.swipeIdx++;renderDeck();},520);
+}
+function swipe(dir){swipeCard(dir,PROFILES[S.swipeIdx]);}
+function superLike(){
+  if(S.starsLeft<=0&&S.plan==='free'){toast('★ Heute kein Super Like mehr — upgrade auf Gold!');return;}
+  const p=PROFILES[S.swipeIdx];
+  if(p){S.superLiked.push(p.id);if(!S.liked.includes(p.id))S.liked.push(p.id);if(S.plan==='free')S.starsLeft=0;const card=document.getElementById('sc-'+p.id);if(card){const st=card.querySelector('.sc-star');if(st)st.style.opacity=1;setTimeout(()=>{card.classList.add('flying');card.style.transform='translateY(-200%) scale(.8)';card.style.opacity='0';setTimeout(()=>{S.swipeIdx++;renderDeck();},500);},300);}toast('⭐ Super-Like an '+p.name+' gesendet!');}
+}
+function rewindCard(){
+  if(S.plan==='free'){toast('↩ Rewind ist ab Gold verfügbar');nav('s-premium');return;}
+  if(S.lastPassed){S.swipeIdx=S.lastPassed.idx;S.passed=S.passed.filter(id=>id!==S.lastPassed.profile.id);renderDeck();toast('↩ Zurückgespult!');S.lastPassed=null;}else{toast('Nichts zum Zurückspulen.');}
+}
+function updLimits(){
+  document.getElementById('likes-left').textContent=S.plan==='free'?S.likesLeft:'∞';
+  document.getElementById('stars-left').textContent=S.plan==='free'?S.starsLeft:(S.plan==='gold'?5:'∞');
+  document.getElementById('likes-pill').className='limit-pill'+(S.likesLeft<=2&&S.plan==='free'?' low':'');
+}
+function showMatch(p){
+  openModal(`<div class="match-modal-content">
+    <div class="mm-hearts">💕</div>
+    <div class="mm-title serif">Es ist ein Match!</div>
+    <div class="mm-sub">Du und ${p.name} mögt euch gegenseitig. Schreibe jetzt — oder lass die KI euer Date planen!</div>
+    <div class="mm-avatars">
+      <div class="mm-av">${S.user.avatar}</div>
+      <div class="mm-vs serif">♥</div>
+      <div class="mm-av">${p.emoji}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-rose btn-block" onclick="openChatWith(${p.id});closeModal();">💬 Nachricht schreiben</button>
+      <button class="btn btn-gold btn-block" onclick="openDateFor(${p.id});closeModal();">✦ KI-Date planen</button>
+      <button class="btn btn-ghost btn-sm btn-block" onclick="closeModal()">Weiter swipen</button>
+    </div>
+  </div>`);
+  spawnConf();
+  updateMatchBadge();
+}
+function openBoost(){
+  openModal(`<div class="boost-modal-content">
+    <div class="boost-ring"><div class="boost-ring-inner">⚡</div></div>
+    <div class="serif" style="font-size:24px;margin-bottom:8px;">Boost aktivieren</div>
+    <p style="color:var(--ash);font-size:13px;line-height:1.7;margin-bottom:0;">Für kurze Zeit in deiner Region ganz oben — bis zu <strong style="color:var(--plat);">10× mehr Aufrufe</strong>.</p>
+    <div class="boost-opts">
+      <div class="boost-opt sel" id="boost-30">
+        <div class="bo-left"><div class="bo-icon">⚡</div><div><div class="bo-label">30 Minuten</div><div class="bo-sub">Perfekt für heute Abend</div></div></div>
+        <div class="bo-price">2,99€</div>
+      </div>
+      <div class="boost-opt" id="boost-60">
+        <div class="bo-left"><div class="bo-icon">⚡⚡</div><div><div class="bo-label">60 Minuten</div><div class="bo-sub">Doppelte Wirkung</div></div></div>
+        <div class="bo-price">4,99€</div>
+      </div>
+      <div class="boost-opt" id="boost-free" style="${S.plan==='gold'||S.plan==='plat'?'':'display:none;'}">
+        <div class="bo-left"><div class="bo-icon">🎁</div><div><div class="bo-label">Gratis Boost</div><div class="bo-sub">Inklusive in deinem Plan (1/Monat)</div></div></div>
+        <div class="bo-price" style="color:var(--teal);">Frei</div>
+      </div>
+    </div>
+    <button class="btn btn-plat btn-block" onclick="activateBoost();closeModal();">⚡ Boost starten</button>
+  </div>`);
+  document.querySelectorAll('.boost-opt').forEach(o=>o.onclick=()=>{document.querySelectorAll('.boost-opt').forEach(x=>x.classList.remove('sel'));o.classList.add('sel');});
+}
+function activateBoost(){S.boostActive=true;toast('⚡ Boost aktiv! Du bist jetzt ganz oben sichtbar.');}
+
+// ═══════════════════════════════════════════
+// MATCHES GRID
+// ═══════════════════════════════════════════
+function renderMatches(){
+  const matches=PROFILES.filter(p=>S.liked.includes(p.id));
+  document.getElementById('mhd-sub').textContent=`${matches.length} Match${matches.length!==1?'es':''} — wähle eins für KI-Date-Planung`;
+  updateMatchBadge();
+  const g=document.getElementById('m-grid');g.innerHTML='';
+  if(!matches.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:80px 20px;"><div style="font-size:48px;margin-bottom:16px">💫</div><div class="serif" style="font-size:22px;margin-bottom:8px">Noch keine Matches</div><p style="color:var(--ash);margin-bottom:20px;font-size:14px;">Swipe Profile um Matches zu sammeln.</p><button class="btn btn-gold btn-sm" onclick="nav('s-swipe')">Profile entdecken →</button></div>`;return;}
+  matches.forEach((m,i)=>{
+    const shared=m.interests.filter(x=>S.user.interests.includes(x));
+    const c=document.createElement('div');c.className='mc fi';c.dataset.cat=m.cat;
+    c.innerHTML=`<div class="mc-ph" style="background:${m.bg}"><span style="font-size:72px;position:relative;z-index:1">${m.emoji}</span><div class="mc-gr"></div>${m.online?'<div class="mc-on"></div>':''}${m.badge?`<div class="mc-bdg${m.badge==='Neu'?' new':''}">${m.badge}</div>`:''}<div class="mc-cb-wrap"><div class="mc-cl">Kompatibilität ${m.compat}%</div><div class="mc-ct"><div class="mc-cf" style="width:${m.compat}%"></div></div></div></div><div class="mc-body"><div class="mc-nm">${m.name}<span class="mc-age">${m.age}</span></div><div class="mc-loc">📍 ${m.city}</div><div class="mc-tags">${m.interests.map(t=>`<span class="mc-tag">${t}</span>`).join('')}</div><div class="mc-acts"><button class="mc-heart" onclick="event.stopPropagation();heartFx(event)">♥</button><button class="mc-ai" onclick="event.stopPropagation();openDateFor(${m.id})">✦ KI-Date</button><button class="mc-chat" onclick="event.stopPropagation();openChatWith(${m.id})">💬 Chat</button></div></div>`;
+    g.appendChild(c);
+  });
+  observeFi();
+}
+function filterM(btn,cat){document.querySelectorAll('.mfb').forEach(b=>b.classList.remove('act'));btn.classList.add('act');document.querySelectorAll('.mc').forEach(c=>{c.style.display=(cat==='all'||c.dataset.cat===cat)?'':'none';});}
+function updateMatchBadge(){const b=document.getElementById('match-badge');const n=S.liked.length;b.textContent=n;b.style.display=n>0?'flex':'none';}
+
+// ═══════════════════════════════════════════
+// WHO LIKED YOU
+// ═══════════════════════════════════════════
+function renderLiked(){
+  const g=document.getElementById('liked-grid');g.innerHTML='';
+  const hasPlan=S.plan==='gold'||S.plan==='plat';
+  document.getElementById('liked-cta').style.display=hasPlan?'none':'flex';
+  LIKED_FAKE.forEach((p,i)=>{
+    const isUnlocked=hasPlan||i<1;
+    const c=document.createElement('div');c.className='liked-card fi';
+    c.innerHTML=`<div class="lc-ph" style="background:linear-gradient(135deg,#1a0f2a,#2a1040)"><span style="font-size:56px;${isUnlocked?'':'opacity:.3;'}">${p.emoji}</span>${!isUnlocked?'<div class="lc-blur"></div><div class="lc-lock"><div class="lc-lock-i">🔒</div><div class="lc-lock-t">Gold</div></div>':''}<div class="lc-heart">♥</div></div><div class="lc-body"><div class="lc-nm ${isUnlocked?'unblur':''}">${p.name}</div><div class="lc-meta">${p.meta}</div>${isUnlocked?`<button class="btn btn-sm btn-rose" style="width:100%;margin-top:10px;font-size:10px;" onclick="toast('💕 Match! Schreib jetzt!')">Match zurück ♥</button>`:`<button class="btn btn-sm btn-gold" style="width:100%;margin-top:10px;font-size:10px;" onclick="nav('s-premium')">Entsperren ✦</button>`}</div>`;
+    g.appendChild(c);
+  });
+  observeFi();
+}
+
+// ═══════════════════════════════════════════
+// DATE PROFILE PANEL
+// ═══════════════════════════════════════════
+function openDateFor(id){S.currentMatch=PROFILES.find(p=>p.id===id);renderDpPanel();document.getElementById('ai-res').classList.remove('show');document.getElementById('ai-load').classList.remove('show');S.currentResult=null;buildStyleGrid();nav('s-date');}
+function renderDpPanel(){
+  const m=S.currentMatch;
+  const shared=m.interests.filter(x=>S.user.interests.includes(x));
+  document.getElementById('dp-panel').innerHTML=`<div class="dp-ph" style="background:${m.bg}"><span style="font-size:72px;position:relative;z-index:1">${m.emoji}</span><div class="dp-gr"></div></div><div class="dp-bd"><div class="dp-nm">${m.name}, ${m.age}</div><div class="dp-mt">📍 ${m.city}</div><div class="dp-bio">${m.bio}</div><div class="dp-comp"><div class="dp-cl2">Kompatibilität</div><div class="dp-cn">${m.compat}%</div><div class="dp-cd">Sehr hoch</div></div>${shared.length?`<div class="dp-sh"><div class="dp-shl">Gemeinsam</div><div class="dp-shtags">${shared.map(i=>`<span class="dp-shtag">${i}</span>`).join('')}</div></div>`:''}</div>`;
+}
+function buildStyleGrid(){
+  const sg=document.getElementById('stg');sg.innerHTML='';
+  DATE_STYLES.forEach(s=>{const d=document.createElement('div');d.className='sto';if(s.l===S.selectedStyle)d.classList.add('sel');d.innerHTML=`<span class="sto-i">${s.e}</span><div class="sto-l">${s.l}</div><div class="sto-d">${s.d}</div>`;d.onclick=()=>{sg.querySelectorAll('.sto').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');S.selectedStyle=s.l;};sg.appendChild(d);});
+}
+function openChatWith(id){S.currentMatch=PROFILES.find(p=>p.id===id);setupChat();nav('s-chat');}
+
+// ═══════════════════════════════════════════
+// AI DATE GENERATOR
+// ═══════════════════════════════════════════
+async function genDate(){
+  const btn=document.getElementById('btn-gen');
+  const load=document.getElementById('ai-load');
+  const res=document.getElementById('ai-res');
+  res.classList.remove('show');load.classList.add('show');btn.disabled=true;
+  const lw=document.getElementById('lsteps');lw.innerHTML='';
+  const steps=['Profile werden analysiert…','Gemeinsame Interessen gewichtet…','Persönlichkeiten abgeglichen…',`Beste Orte in ${S.currentMatch.city} ermittelt…`,'Date-Konzept wird verfasst…'];
+  steps.forEach(s=>{const d=document.createElement('div');d.className='ls';d.textContent=s;lw.appendChild(d);});
+  lw.querySelectorAll('.ls').forEach((l,i)=>setTimeout(()=>l.classList.add('v'),(i+1)*700));
+  const u=S.user,m=S.currentMatch;
+  const budget=document.getElementById('p-bgt').value;
+  const tod=document.getElementById('p-tod').value;
+  const wish=document.getElementById('p-wish').value;
+  const shared=m.interests.filter(x=>u.interests.includes(x));
+  const prompt=`Du bist ein einfühlsamer, kreativer KI-Dating-Coach. Analysiere diese zwei Profile und erstelle einen hyperdetaillierten Date-Vorschlag auf Deutsch. Sei poetisch, präzise und hilfreich.
+
+PERSON 1 — ${u.name}, ${u.age}, ${u.city}
+Bio: ${u.bio}
+Persönlichkeit: ${u.personality.join(', ')||'offen, neugierig'}
+Interessen: ${u.interests.join(', ')||'vielfältig'}
+Date-Vorlieben: ${u.prefs.join(', ')||'offen'}
+
+PERSON 2 — ${m.name}, ${m.age}, ${m.city}
+Bio: ${m.bio}
+Charakter: ${m.char}
+Interessen: ${m.interests.join(', ')}
+
+GEMEINSAM: ${shared.join(', ')||'wird erschlossen'}
+STIL: ${S.selectedStyle}
+BUDGET: ${budget}
+TAGESZEIT: ${tod}
+BESONDERES: ${wish||'keine'}
+
+Antworte NUR mit rohem JSON (kein Markdown):
+{
+  "title":"Poetischer Date-Name (3-5 Worte)",
+  "tagline":"Eine Zeile die Vorfreude weckt (max 12 Worte)",
+  "vibe":"3 Emojis + Atmosphäre in einem Satz",
+  "why":"3 Sätze warum diese zwei Menschen perfekt passen — konkret basierend auf den Profilen",
+  "activity":"Name der Hauptaktivität",
+  "detail":"3 lebendige Sätze: Was genau machen sie, wie läuft es ab?",
+  "location":"Spezifischer Ort in ${m.city}",
+  "timing":"Tageszeit + warum perfekt",
+  "duration":"Gesamtdauer",
+  "conversation":["Tiefgründige Frage 1","Humorvolle Frage 2","Träume-Frage 3"],
+  "icebreaker":"Eine kreative, spielerische Aktivität zum Eisbrechen",
+  "moment":"Ein konkreter filmreifer romantischer Höhepunkt",
+  "prep":"1 konkreter Tipp für ${u.name} zur Vorbereitung",
+  "tips":["Sanfter Hinweis 1","Sanfter Hinweis 2"]
+}`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    const data=await r.json();
+    let raw=data.content.map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim();
+    const jm=raw.match(/\{[\s\S]*\}/);
+    const d=JSON.parse(jm?jm[0]:raw);
+    S.currentResult=d;showResult(d);
+  }catch(e){showResultErr();}
+  finally{load.classList.remove('show');btn.disabled=false;}
+}
+function showResult(d){
+  document.getElementById('res-content').innerHTML=`
+    <div class="res-sec">
+      <div class="res-badge">✦ KI Date-Vorschlag</div>
+      <div class="res-title serif">${d.title}</div>
+      <div class="res-tl">"${d.tagline}"</div>
+      <div class="res-vibe">${d.vibe}</div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Warum ihr perfekt passt</div>
+      <div class="res-txt">${d.why}</div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Das Date</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:6px;">${d.activity}</div>
+      <div class="dchips">
+        <div class="dchip"><div class="dchip-i">📍</div><div class="dchip-v">${(d.location||'').split(',')[0]}</div><div class="dchip-k">Ort</div></div>
+        <div class="dchip"><div class="dchip-i">🕐</div><div class="dchip-v">${(d.timing||'').split('+')[0].trim()}</div><div class="dchip-k">Zeit</div></div>
+        <div class="dchip"><div class="dchip-i">⏱</div><div class="dchip-v">${d.duration}</div><div class="dchip-k">Dauer</div></div>
+      </div>
+      <div class="res-txt">${d.detail}</div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Eisbrecher 🎯</div>
+      <div class="spec-box"><p>${d.icebreaker}</p></div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Gesprächsstarter ✦</div>
+      <div class="convos">${(d.conversation||[]).map(q=>`<div class="convo">"${q}"</div>`).join('')}</div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Der magische Moment 💫</div>
+      <div class="spec-box" style="border-color:rgba(212,96,122,.22);background:linear-gradient(135deg,rgba(212,96,122,.06),rgba(201,169,110,.03));"><p>${d.moment}</p></div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Deine Vorbereitung</div>
+      <div class="res-txt">${d.prep}</div>
+      <div class="warn-chips">${(d.tips||[]).map(t=>`<span class="warn-chip">⚠ ${t}</span>`).join('')}</div>
+    </div>`;
+  document.getElementById('ai-res').classList.add('show');
+  document.getElementById('ai-res').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function showResultErr(){document.getElementById('res-content').innerHTML=`<div style="text-align:center;padding:40px;"><div style="font-size:32px;margin-bottom:12px">⚡</div><div class="serif" style="font-size:18px;margin-bottom:8px">KI kurz ausgelastet</div><p style="color:var(--ash);font-size:13px;">Bitte nochmals versuchen.</p></div>`;document.getElementById('ai-res').classList.add('show');}
+function acceptDate(){spawnConf();const m=S.currentMatch;toast('🌹 Date mit '+m.name+' bestätigt!');setupChat();setTimeout(()=>nav('s-chat'),700);}
+function shareDate(){navigator.clipboard?.writeText('Schau dir meinen KI-Date-Vorschlag auf Amoré an! 🌹').then(()=>toast('🔗 Link kopiert!'));}
+
+// ═══════════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════════
+function setupChat(){
+  const m=S.currentMatch;if(!m)return;
+  document.getElementById('ch-av').childNodes[0].textContent=m.emoji;
+  document.getElementById('ch-nm').textContent=m.name;
+  const body=document.getElementById('ch-body');body.innerHTML='';
+  const msgs=[
+    {from:'them',text:`Hey ${S.user.name||'du'}! 😊 Ich freue mich, dass wir gematcht haben!`},
+    {from:'me',text:`Ich auch! Dein Profil hat mich sofort angesprochen. 💕`},
+    {from:'them',text:`Haha, das freut mich! Was machst du gerade so?`}
+  ];
+  msgs.forEach((msg,i)=>setTimeout(()=>addMsg(msg.from,msg.from==='me'?S.user.avatar:m.emoji,msg.text),i*400));
+  if(S.currentResult){
+    setTimeout(()=>{
+      const dc=document.createElement('div');dc.className='date-msg-card fi';dc.style.marginLeft='42px';
+      dc.innerHTML=`<div class="dmc-lbl">✦ KI Date-Vorschlag</div><div class="dmc-title serif">${S.currentResult.title||''}</div><div class="dmc-sub">${S.currentResult.tagline||''}</div><div class="dmc-chips"><span class="dmc-chip">📍 ${(S.currentResult.location||'').split(',')[0]}</span><span class="dmc-chip">🕐 ${(S.currentResult.timing||'').split(' ')[0]}</span><span class="dmc-chip">⏱ ${S.currentResult.duration||''}</span></div>`;
+      body.appendChild(dc);body.scrollTop=body.scrollHeight;
+      setTimeout(()=>{
+        const tb=mkTyping(m.emoji);body.appendChild(tb);body.scrollTop=body.scrollHeight;
+        setTimeout(()=>{body.removeChild(tb);addMsg('them',m.emoji,`Das klingt wunderschön! 😍 Ich bin auf jeden Fall dabei — wann passt es dir?`);},1800);
+      },600);
+    },msgs.length*400+500);
+  }
+}
+function mkTyping(av){const w=document.createElement('div');w.className='msg them';w.innerHTML=`<div class="msg-av">${av}</div><div class="typing-bbl"><div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div></div>`;return w;}
+function addMsg(side,avatar,text){
+  const body=document.getElementById('ch-body');
+  const w=document.createElement('div');w.className=`msg ${side==='me'?'me':'them'}`;
+  const now=new Date();const time=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const read=side==='me'&&S.plan==='plat'?`<div class="msg-read">✓✓ gelesen</div>`:'';
+  w.innerHTML=`<div class="msg-av">${avatar}</div><div><div class="msg-bbl">${text}</div><div style="display:flex;gap:6px;">${read}<div class="msg-time">${time}</div></div></div>`;
+  body.appendChild(w);body.scrollTop=body.scrollHeight;
+}
+async function sendMsg(){
+  const inp=document.getElementById('ch-input');const txt=inp.value.trim();if(!txt)return;
+  const m=S.currentMatch;addMsg('me',S.user.avatar,txt);inp.value='';
+  const body=document.getElementById('ch-body');const tb=mkTyping(m.emoji);body.appendChild(tb);body.scrollTop=body.scrollHeight;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:120,system:`Du bist ${m.name}, ${m.age} aus ${m.city}. Bio: ${m.bio}. Charakter: ${m.char}. Du chattest auf Deutsch mit deinem neuen Match ${S.user.name||'dir'}. Antworte warm, natürlich und leicht flirty — max. 2 kurze Sätze, kein Preamble.`,messages:[{role:'user',content:txt}]})});
+    const data=await r.json();const reply=data.content[0]?.text?.trim()||'😊';
+    body.removeChild(tb);addMsg('them',m.emoji,reply);
+  }catch(e){body.removeChild(tb);addMsg('them',m.emoji,'😊');}
+}
+
+// ═══════════════════════════════════════════
+// PREMIUM / PLANS
+// ═══════════════════════════════════════════
+let billingCycle='monthly';
+function setBilling(c){billingCycle=c;document.getElementById('bt-monthly').classList.toggle('act',c==='monthly');document.getElementById('bt-yearly').classList.toggle('act',c==='yearly');renderPremium();}
+function renderPremium(){
+  const pg=document.getElementById('plans-grid');pg.innerHTML='';
+  PLANS_DATA.forEach(p=>{
+    const isOwned=S.plan===p.key;
+    const price=p.price[billingCycle];
+    const d=document.createElement('div');
+    d.className=`plan fi${p.popular?' popular':''}${p.plat?' plat-p':''}`;
+    d.innerHTML=`${p.popular?`<div class="plan-pop-badge">Beliebtester Plan</div>`:''}${p.plat?`<div class="plan-pop-badge plat">Meiste Features</div>`:''}
+    <div class="plan-icon">${p.icon}</div>
+    <div class="plan-name serif">${p.name}</div>
+    <div class="plan-desc">${p.desc}</div>
+    <div class="plan-price">
+      <div class="plan-amount ${p.col==='gold'?'gold-c':p.col==='plat'?'plat-c':''}">${price}</div>
+      ${price!=='Kostenlos'?`<div class="plan-period">pro Monat ${billingCycle==='yearly'?`<span>${p.price.monthly}</span>`:''}${billingCycle==='yearly'?' · jährlich abgerechnet':''}</div>`:''}
+    </div>
+    <ul class="plan-feats">${p.feats.map(f=>`<li${p.plat?' class="plat-feat"':''}>${f}</li>`).join('')}${p.noFeats.map(f=>`<li class="dim">${f}</li>`).join('')}</ul>
+    ${isOwned
+      ?`<div class="btn btn-ghost btn-block" style="opacity:.5;cursor:default;justify-content:center;">✓ Aktueller Plan</div>`
+      :`<button class="btn ${p.key==='plat'?'btn-plat':p.key==='gold'?'btn-gold':'btn-ghost'} btn-block" onclick="choosePlan('${p.key}')">${p.key==='free'?'Kostenlos starten':'Upgrade auf '+p.name+' →'}</button>`
+    }`;
+    pg.appendChild(d);
+  });
+  // Addons
+  const ag=document.getElementById('addons-grid');ag.innerHTML='';
+  ADDONS.forEach(a=>{const d=document.createElement('div');d.className='addon fi';d.innerHTML=`<div class="addon-icon">${a.icon}</div><div class="addon-name">${a.name}</div><div class="addon-desc">${a.desc}</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;"><div class="addon-price">${a.price}</div><button class="btn btn-gold btn-sm" onclick="buyAddon('${a.name}')">Kaufen</button></div>`;ag.appendChild(d);});
+  observeFi();
+}
+function choosePlan(key){
+  if(key==='free'){S.plan='free';toast('Du nutzt jetzt Basis kostenlos.');return;}
+  openModal(`<div style="text-align:center;">
+    <div style="font-size:40px;margin-bottom:16px;">${key==='gold'?'✦':'★'}</div>
+    <div class="serif" style="font-size:26px;margin-bottom:8px;">Amoré ${key==='gold'?'Gold':'Platin'} abonnieren</div>
+    <p style="color:var(--ash);font-size:13px;line-height:1.7;margin-bottom:24px;">14 Tage kostenlos testen — danach ${key==='gold'?'9,99€':'19,99€'}/Monat. Jederzeit kündbar.</p>
+    <div style="background:var(--lift);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="field"><label>Karteninhaber</label><input placeholder="Max Mustermann" value="Mia Beispiel"></div>
+        <div class="field"><label>Kartennummer</label><input placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="field"><label>Ablaufdatum</label><input placeholder="MM/JJ" value="12/27"></div>
+          <div class="field"><label>CVC</label><input placeholder="123" value="123"></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn ${key==='gold'?'btn-gold':'btn-plat'} btn-block" onclick="confirmPlan('${key}');closeModal();">🔒 Sicher abonnieren</button>
+    <p style="font-size:11px;color:var(--ash);margin-top:12px;">SSL-verschlüsselt · DSGVO-konform · Jederzeit kündbar</p>
+  </div>`);
+}
+function confirmPlan(key){S.plan=key;toast(`🎉 Willkommen in Amoré ${key==='gold'?'Gold':'Platin'}!`);spawnConf();updateProfileUI();renderPremium();}
+function buyAddon(name){toast(`🛒 ${name} wurde gekauft! Check dein Profil.`);}
+function checkPrem(el,tier){
+  if((tier==='gold'&&(S.plan==='gold'||S.plan==='plat'))||(tier==='plat'&&S.plan==='plat')){el.classList.toggle('on');}
+  else{toast('✦ Dieses Feature benötigt '+(tier==='gold'?'Gold':'Platin'));nav('s-premium');}
+}
+
+// ═══════════════════════════════════════════
+// PROFILE UI
+// ═══════════════════════════════════════════
+function updateProfileUI(){
+  document.getElementById('prof-nm').textContent=S.user.name||'Mia';
+  document.getElementById('prof-loc').textContent='📍 '+(S.user.city||'Zürich');
+  document.getElementById('prof-av-big').textContent=S.user.avatar||'👤';
+  const tp=document.getElementById('tier-pill');
+  tp.className='tier-pill '+(S.plan==='plat'?'tier-plat':S.plan==='gold'?'tier-gold':'tier-free');
+  tp.textContent=S.plan==='plat'?'★ Platin':S.plan==='gold'?'✦ Gold':'✦ Basis';
+}
+function showProfTab(tab,btn){
+  document.querySelectorAll('.prof-section').forEach(s=>s.classList.remove('act'));
+  document.getElementById('ps-'+tab).classList.add('act');
+  document.querySelectorAll('.pn-item').forEach(b=>b.classList.remove('act'));
+  if(btn)btn.classList.add('act');
+}
+function saveProfile(){S.user.name=document.getElementById('pe-name').value;S.user.city=document.getElementById('pe-city').value;updateProfileUI();toast('✓ Profil gespeichert!');}
+function openBlockModal(){openModal(`<div class="serif" style="font-size:22px;margin-bottom:16px;">Blockierte Nutzer</div><p style="color:var(--ash);font-size:13px;line-height:1.7;">Du hast aktuell niemanden blockiert.</p>`);}
+
+// ═══════════════════════════════════════════
+// EFFECTS
+// ═══════════════════════════════════════════
+function heartFx(e){
+  e.stopPropagation();
+  const emojis=['♥','💕','✨','💫','🌹'];const cols=['#c9a96e','#d4607a','#ee9aaa','#e8cc94'];
+  for(let i=0;i<8;i++)setTimeout(()=>{const el=document.createElement('div');el.className='fh';const rot=`${(Math.random()-.5)*30}deg`;el.style.cssText=`left:${e.clientX+(Math.random()-.5)*60}px;top:${e.clientY}px;font-size:${13+Math.random()*13}px;--r:${rot};color:${cols[Math.floor(Math.random()*cols.length)]};`;el.textContent=emojis[Math.floor(Math.random()*emojis.length)];document.body.appendChild(el);setTimeout(()=>el.remove(),2200);},i*55);
+}
+function spawnConf(){const cols=['#c9a96e','#d4607a','#ee9aaa','#5ecfbe','#e8cc94','#fff'];for(let i=0;i<60;i++)setTimeout(()=>{const el=document.createElement('div');el.className='conf-p';el.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};--cd:${2+Math.random()*2}s;--cx:${(Math.random()-.5)*200}px;transform:rotate(${Math.random()*360}deg);`;document.body.appendChild(el);setTimeout(()=>el.remove(),4000);},i*50);}
+function toast(msg,dur=3200){const w=document.getElementById('toast-wrap');const t=document.createElement('div');t.className='toast';t.textContent=msg;w.appendChild(t);setTimeout(()=>{t.style.animation='tOut .4s ease both';setTimeout(()=>t.remove(),400);},dur);}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+observeFi();
+renderPremium();
+</script>
+</body>
+</html>
