@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amoré — Designed to be deleted.</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   DESIGN TOKENS
+───────────────────────────────────────────────────────── */
+:root {
+  /* Land (light) */
+  --land-bg:   #f8f6f2;
+  --land-ink:  #111009;
+  --land-mid:  #6b6860;
+  --land-rule: rgba(17,16,9,.09);
+  --land-rose: #c94f6a;
+
+  /* App (dark) */
+  --app-bg:    #0c0b09;
+  --app-surf:  #141310;
+  --app-card:  #1c1a17;
+  --app-lift:  #232018;
+  --app-rim:   rgba(255,249,236,.06);
+  --app-rim2:  rgba(255,249,236,.12);
+
+  /* Accents */
+  --amber:     #d4925a;
+  --amber2:    #eab97c;
+  --coral:     #d95f72;
+  --coral2:    #f0909e;
+  --sage:      #5bbfaa;
+
+  /* Text */
+  --cream:     #f5efe4;
+  --mist:      #8a8070;
+  --fog:       #4a443c;
+
+  --r: 20px;
+  --r2: 28px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:16px; scroll-behavior:smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+  overflow-x: hidden;
+  background: var(--land-bg);
+  color: var(--land-ink);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font-family: 'Outfit', sans-serif; }
+
+/* ─────────────────────────────────────────────────────────
+   SCREENS
+───────────────────────────────────────────────────────── */
+.screen { display:none; min-height:100vh; }
+.screen.on { display:block; }
+#s-app { display:none; min-height:100vh; background:var(--app-bg); }
+#s-app.on { display:block; }
+
+/* ─────────────────────────────────────────────────────────
+   GLOBAL FEEDBACK
+───────────────────────────────────────────────────────── */
+#toasts {
+  position:fixed; bottom:90px; left:50%; transform:translateX(-50%);
+  z-index:9000; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none;
+}
+.t-item {
+  background: rgba(28,26,23,.96); border:1px solid var(--app-rim2);
+  color:var(--cream); padding:10px 20px; border-radius:100px;
+  font-size:13px; font-weight:400; backdrop-filter:blur(20px);
+  white-space:nowrap; animation:tIn .3s ease both;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+@keyframes tIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+@keyframes tOut { to{opacity:0;transform:translateY(8px)} }
+
+/* Confetti / Hearts */
+.fh { position:fixed; pointer-events:none; z-index:9999; animation:fhUp 2s ease-out forwards; }
+@keyframes fhUp { from{opacity:1;transform:translateY(0) scale(1) rotate(var(--r,0deg))} to{opacity:0;transform:translateY(-140px) scale(.25) rotate(calc(var(--r,0deg)+25deg))} }
+.cfp { position:fixed; pointer-events:none; z-index:9990; width:7px; height:7px; border-radius:2px; animation:cfFall var(--d,3s) ease-in forwards; }
+@keyframes cfFall { from{opacity:1;transform:translateY(0) rotate(0)} to{opacity:0;transform:translateY(100vh) rotate(600deg) translateX(var(--x,0))} }
+
+/* Modal */
+.modal-bg {
+  position:fixed; inset:0; z-index:800;
+  background:rgba(0,0,0,.6); backdrop-filter:blur(10px);
+  display:flex; align-items:flex-end; justify-content:center;
+  padding:0; opacity:0; pointer-events:none; transition:opacity .28s;
+}
+.modal-bg.open { opacity:1; pointer-events:all; }
+.modal-sheet {
+  background:var(--app-surf); border:1px solid var(--app-rim2);
+  border-radius:28px 28px 0 0; padding:32px 24px 48px;
+  width:100%; max-width:520px; max-height:92vh; overflow-y:auto;
+  animation:sheetUp .32s cubic-bezier(.2,.8,.3,1) both;
+  position:relative;
+}
+@keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.sheet-handle {
+  width:36px; height:4px; background:var(--app-rim2); border-radius:2px;
+  margin:0 auto 28px; cursor:grab;
+}
+.sheet-close {
+  position:absolute; top:20px; right:20px; width:32px; height:32px;
+  border-radius:50%; background:var(--app-lift); border:none;
+  color:var(--mist); font-size:16px; cursor:pointer; display:flex;
+  align-items:center; justify-content:center; transition:all .2s;
+}
+.sheet-close:hover { background:var(--app-card); color:var(--cream); }
+
+/* ═══════════════════════════════════════════════════════
+   LANDING
+═══════════════════════════════════════════════════════ */
+#s-land { background: var(--land-bg); }
+
+/* Nav */
+.l-nav {
+  padding: 28px 48px;
+  display: flex; justify-content:space-between; align-items:center;
+  border-bottom: 1px solid var(--land-rule);
+}
+.l-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-style:italic; font-weight:600;
+  color: var(--land-ink); letter-spacing:.5px;
+}
+.l-nav-r { display:flex; gap:10px; }
+.l-btn {
+  padding: 9px 22px; border-radius:8px; font-size:13px; font-weight:500;
+  cursor:pointer; transition:all .2s; border: 1.5px solid var(--land-rule);
+  background:transparent; color:var(--land-ink);
+}
+.l-btn:hover { border-color: rgba(17,16,9,.22); }
+.l-btn.solid { background:var(--land-ink); color:var(--land-bg); border-color:var(--land-ink); }
+.l-btn.solid:hover { opacity:.88; }
+
+/* Hero */
+.l-hero {
+  display: grid; grid-template-columns: 1fr 480px;
+  max-width: 1140px; margin:0 auto;
+  padding: 80px 48px 80px; gap: 0; align-items:center;
+}
+.l-left { padding-right:60px; }
+.l-eyebrow {
+  font-size: 11px; font-weight:500; letter-spacing:3px; text-transform:uppercase;
+  color: var(--land-mid); margin-bottom:28px;
+  display: flex; align-items:center; gap:12px;
+}
+.l-eyebrow::before { content:''; width:28px; height:1px; background:currentColor; }
+.l-h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(56px, 6.5vw, 88px);
+  font-weight: 300; line-height: 1.0; letter-spacing:-2px;
+  color: var(--land-ink); margin-bottom:28px;
+}
+.l-h1 strong { font-weight:600; }
+.l-h1 em { font-style:italic; color:var(--land-rose); }
+.l-p {
+  font-size:16px; line-height:1.8; color:var(--land-mid);
+  max-width:420px; margin-bottom:40px; font-weight:300;
+}
+.l-actions { display:flex; gap:12px; margin-bottom:52px; flex-wrap:wrap; }
+.l-cta-main {
+  padding:15px 40px; border-radius:8px; background:var(--land-ink);
+  color:var(--land-bg); border:none; font-size:14px; font-weight:500;
+  cursor:pointer; transition:opacity .2s, transform .2s; letter-spacing:.3px;
+}
+.l-cta-main:hover { opacity:.86; transform:translateY(-1px); }
+.l-cta-sec {
+  padding:15px 32px; border-radius:8px; background:transparent;
+  color:var(--land-mid); border:1.5px solid var(--land-rule);
+  font-size:14px; font-weight:400; cursor:pointer; transition:all .2s;
+}
+.l-cta-sec:hover { color:var(--land-ink); border-color:rgba(17,16,9,.22); }
+.l-trust {
+  display:flex; align-items:center; gap:14px;
+  font-size:12px; color:var(--land-mid); font-weight:300;
+}
+.l-trust-dot { width:3px; height:3px; border-radius:50%; background:var(--land-rule); }
+
+/* Right: stacked cards mockup */
+.l-right { position:relative; height:560px; }
+.l-card-stack { position:relative; width:320px; margin:0 auto; }
+.l-card {
+  position:absolute; width:300px; border-radius:24px; overflow:hidden;
+  box-shadow: 0 32px 64px rgba(0,0,0,.2);
+}
+.l-card-1 { top:0; left:10px; transform:rotate(3deg); z-index:1; }
+.l-card-2 { top:20px; left:0; z-index:2; }
+.l-card-inner {
+  height:420px; display:flex; align-items:flex-end;
+  padding:22px; position:relative;
+}
+.lc-grad { position:absolute; inset:0; background:linear-gradient(to top,rgba(12,11,9,1) 0%,rgba(12,11,9,.4) 50%,transparent 100%); }
+.lc-body { position:relative; z-index:1; width:100%; }
+.lc-match { display:inline-flex; align-items:center; gap:5px; background:rgba(212,146,90,.15); border:1px solid rgba(212,146,90,.35); border-radius:100px; padding:4px 11px; font-size:10px; color:var(--amber); font-weight:500; margin-bottom:10px; letter-spacing:.5px; }
+.lc-name { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:400; color:#fff; margin-bottom:4px; }
+.lc-sub { font-size:12px; color:rgba(255,255,255,.5); margin-bottom:14px; }
+.lc-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.lc-tag { padding:4px 10px; border-radius:100px; font-size:10px; background:rgba(255,255,255,.1); backdrop-filter:blur(6px); color:rgba(255,255,255,.7); }
+/* Floating chips */
+.l-chip {
+  position:absolute; background:#fff; border-radius:14px; padding:12px 16px;
+  box-shadow:0 8px 24px rgba(0,0,0,.1); white-space:nowrap;
+  animation:chipFloat var(--cf-d,4s) ease-in-out infinite;
+  font-size:12px;
+}
+.l-chip .ci { font-size:18px; margin-bottom:5px; }
+.l-chip .cl { font-weight:600; color:var(--land-ink); font-size:12px; }
+.l-chip .cs { color:var(--land-mid); font-size:11px; }
+.ch-1 { top:60px; right:0; --cf-d:4s; }
+.ch-2 { top:200px; left:-40px; --cf-d:5.5s; animation-delay:.8s; }
+.ch-3 { bottom:80px; right:-20px; --cf-d:3.8s; animation-delay:1.6s; }
+@keyframes chipFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+
+/* Stats bar */
+.l-stats {
+  border-top:1px solid var(--land-rule);
+  padding:40px 48px; display:flex; justify-content:center;
+  gap:72px; flex-wrap:wrap;
+}
+.l-stat { text-align:center; }
+.l-stat-n {
+  font-family:'Cormorant Garamond',serif; font-size:40px;
+  font-weight:600; color:var(--land-ink); line-height:1; display:block;
+}
+.l-stat-l { font-size:12px; color:var(--land-mid); margin-top:6px; font-weight:300; letter-spacing:.5px; }
+
+/* ═══════════════════════════════════════════════════════
+   ONBOARDING
+═══════════════════════════════════════════════════════ */
+#s-onboard {
+  background:var(--land-bg);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px; min-height:100vh;
+}
+.onb-wrap { width:100%; max-width:440px; }
+/* Progress */
+.onb-prog-row { display:flex; gap:5px; margin-bottom:36px; }
+.onb-prog-seg { flex:1; height:2px; background:var(--land-rule); border-radius:1px; overflow:hidden; }
+.onb-prog-fill { height:100%; background:var(--land-rose); transform:scaleX(0); transform-origin:left; transition:transform .5s ease; }
+.onb-prog-seg.done .onb-prog-fill { transform:scaleX(1); }
+.onb-prog-seg.cur .onb-prog-fill { transform:scaleX(.5); }
+/* Card */
+.onb-card {
+  background:#fff; border-radius:20px;
+  box-shadow:0 2px 32px rgba(17,16,9,.07);
+  overflow:hidden; margin-bottom:16px;
+}
+.onb-card-body { padding:36px 32px 28px; }
+.onb-step-lbl { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--land-mid); margin-bottom:12px; }
+.onb-h { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:400; color:var(--land-ink); margin-bottom:6px; line-height:1.15; }
+.onb-sub { font-size:14px; color:var(--land-mid); line-height:1.65; margin-bottom:26px; font-weight:300; }
+.ostep { display:none; } .ostep.on { display:block; }
+/* Avatar row */
+.av-strip { display:flex; gap:9px; flex-wrap:wrap; margin-bottom:22px; }
+.av-pill {
+  width:52px; height:52px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:23px; border:2px solid var(--land-rule);
+  cursor:pointer; transition:all .22s; background:var(--land-bg);
+}
+.av-pill:hover { border-color:rgba(17,16,9,.25); transform:scale(1.06); }
+.av-pill.on { border-color:var(--land-rose); box-shadow:0 0 0 3px rgba(201,79,106,.14); }
+/* Field */
+.f2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.f1 { margin-bottom:12px; }
+.fg { display:flex; flex-direction:column; gap:5px; }
+.fg label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--land-mid); }
+.fg input, .fg select, .fg textarea {
+  background:var(--land-bg); border:1.5px solid var(--land-rule); border-radius:10px;
+  color:var(--land-ink); font-size:14px; padding:11px 13px; outline:none;
+  transition:border-color .2s; width:100%; font-family:'Outfit',sans-serif;
+}
+.fg input:focus,.fg select:focus,.fg textarea:focus { border-color:var(--land-rose); }
+.fg textarea { resize:none; height:74px; line-height:1.55; }
+input::placeholder,textarea::placeholder { color:var(--land-mid); opacity:.5; }
+/* Quiz options */
+.qopts { display:flex; flex-direction:column; gap:9px; }
+.qopt {
+  border:1.5px solid var(--land-rule); border-radius:14px; padding:15px 18px;
+  cursor:pointer; display:flex; align-items:center; gap:14px; transition:all .2s;
+}
+.qopt:hover { border-color:rgba(17,16,9,.22); }
+.qopt.on { border-color:var(--land-rose); background:rgba(201,79,106,.04); }
+.qopt-ico { font-size:22px; flex-shrink:0; }
+.qopt-l { font-size:14px; color:var(--land-ink); font-weight:400; }
+.qopt-s { font-size:11px; color:var(--land-mid); margin-top:2px; }
+/* Chips */
+.chip-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.chip {
+  padding:9px 16px; border-radius:100px; border:1.5px solid var(--land-rule);
+  background:transparent; color:var(--land-mid); font-size:13px; cursor:pointer;
+  transition:all .2s; display:flex; align-items:center; gap:5px;
+  font-family:'Outfit',sans-serif; font-weight:400;
+}
+.chip:hover { border-color:rgba(17,16,9,.22); color:var(--land-ink); }
+.chip.on { border-color:var(--land-rose); color:var(--land-rose); background:rgba(201,79,106,.06); }
+/* Date prefs */
+.dpg { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.dpo {
+  border:1.5px solid var(--land-rule); border-radius:14px; padding:16px 12px;
+  cursor:pointer; transition:all .22s; text-align:center;
+}
+.dpo:hover { border-color:rgba(17,16,9,.22); }
+.dpo.on { border-color:var(--land-rose); background:rgba(201,79,106,.04); }
+.dpo-i { font-size:26px; margin-bottom:7px; }
+.dpo-l { font-size:13px; color:var(--land-ink); font-weight:400; margin-bottom:2px; }
+.dpo-d { font-size:11px; color:var(--land-mid); }
+/* Footer */
+.onb-footer {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:20px 32px; border-top:1px solid var(--land-rule);
+}
+.onb-bk { background:none; border:none; font-size:13px; color:var(--land-mid); cursor:pointer; transition:color .2s; font-family:'Outfit',sans-serif; padding:0; }
+.onb-bk:hover { color:var(--land-ink); }
+.onb-nxt {
+  padding:12px 28px; border-radius:8px; background:var(--land-ink);
+  color:var(--land-bg); border:none; font-size:13px; font-weight:500;
+  cursor:pointer; transition:opacity .2s,transform .2s; font-family:'Outfit',sans-serif;
+}
+.onb-nxt:hover { opacity:.86; transform:translateY(-1px); }
+
+/* ═══════════════════════════════════════════════════════
+   APP
+═══════════════════════════════════════════════════════ */
+
+/* Top bar */
+.app-bar {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  height:58px; background:var(--app-bg); border-bottom:1px solid var(--app-rim);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px;
+}
+.ab-logo { font-family:'Cormorant Garamond',serif; font-size:22px; font-style:italic; font-weight:600; color:var(--amber); }
+.ab-right { display:flex; gap:8px; align-items:center; }
+.ab-btn {
+  width:36px; height:36px; border-radius:10px; background:var(--app-card);
+  border:none; color:var(--mist); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all .2s;
+}
+.ab-btn:hover { background:var(--app-lift); color:var(--cream); }
+.ab-avatar {
+  width:34px; height:34px; border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--coral));
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; cursor:pointer; border:2px solid var(--app-rim2); transition:border-color .2s;
+}
+.ab-avatar:hover { border-color:var(--amber); }
+
+/* Content area */
+.app-content {
+  position: fixed;
+  top: 58px;
+  bottom: 70px;
+  left: 0; right: 0;
+  background: var(--app-bg);
+  overflow: hidden;
+}
+.app-tab {
+  display: none;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.app-tab::-webkit-scrollbar { display: none; }
+.app-tab.on { display: block; }
+
+/* Bottom nav */
+.bot-nav {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  height:70px; background:var(--app-surf); border-top:1px solid var(--app-rim);
+  display:flex; align-items:center; padding:0 4px;
+}
+.bn {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:3px; cursor:pointer; padding:8px 2px;
+  border-radius:12px; transition:background .2s; border:none; background:transparent; position:relative;
+}
+.bn:hover { background:var(--app-card); }
+.bn-ico { font-size:20px; color:var(--fog); transition:color .2s; line-height:1; }
+.bn-lbl { font-size:10px; color:var(--fog); font-weight:400; transition:color .2s; letter-spacing:.3px; }
+.bn.on .bn-ico { color:var(--amber); }
+.bn.on .bn-lbl { color:var(--amber); font-weight:500; }
+.bn-badge {
+  position:absolute; top:5px; right:calc(50% - 18px);
+  background:var(--coral); color:#fff; font-size:9px; font-weight:700;
+  min-width:16px; height:16px; border-radius:8px; display:none; align-items:center;
+  justify-content:center; padding:0 4px; border:2px solid var(--app-surf);
+}
+.bn-badge.vis { display:flex; }
+/* active pip */
+.bn.on::after { content:''; position:absolute; bottom:5px; width:18px; height:2px; background:var(--amber); border-radius:1px; }
+
+/* ─── TAB: DISCOVER ─── */
+#tab-discover { padding-bottom:16px; }
+.disc-hd {
+  padding:20px 20px 14px;
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+.disc-hd-left h2 { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:400; color:var(--cream); }
+.disc-hd-left p { font-size:12px; color:var(--mist); margin-top:2px; }
+.disc-hd-right { display:flex; gap:7px; align-items:center; }
+.filter-pill {
+  padding:6px 14px; border-radius:100px; border:1px solid var(--app-rim2);
+  background:transparent; color:var(--mist); font-size:11px; cursor:pointer;
+  transition:all .2s; font-family:'Outfit',sans-serif; font-weight:400;
+}
+.filter-pill.on, .filter-pill:hover { border-color:var(--amber); color:var(--amber); background:rgba(212,146,90,.08); }
+
+/* Limit chips */
+.lim-row { display:flex; gap:8px; padding:0 20px 14px; }
+.lim-chip {
+  display:flex; align-items:center; gap:5px; font-size:11px; color:var(--mist);
+  background:var(--app-card); padding:5px 12px; border-radius:100px;
+  border:1px solid var(--app-rim);
+}
+.lim-chip.warn { color:var(--coral); border-color:rgba(217,95,114,.25); }
+.lim-chip strong { color:var(--cream); font-weight:500; }
+
+/* Deck */
+.deck-area { display:flex; flex-direction:column; align-items:center; padding:0 16px; }
+.deck-wrap { position:relative; width:100%; max-width:340px; height:490px; margin-bottom:22px; }
+.s-card {
+  position:absolute; inset:0; border-radius:26px; overflow:hidden;
+  cursor:grab; user-select:none;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);
+  transform-origin:bottom center;
+}
+.s-card:active { cursor:grabbing; }
+.s-card.fly { transition:transform .52s cubic-bezier(.2,.8,.3,1), opacity .42s; }
+.sc-bg { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:100px; position:relative; }
+.sc-shade { position:absolute; inset:0; background:linear-gradient(to top,rgba(12,11,9,1) 0%,rgba(12,11,9,.5) 38%,transparent 68%); }
+.sc-body { position:absolute; bottom:0; left:0; right:0; padding:20px; }
+.sc-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(212,146,90,.14); backdrop-filter:blur(12px);
+  border:1px solid rgba(212,146,90,.32); border-radius:100px;
+  padding:4px 12px; font-size:10px; color:var(--amber); font-weight:500;
+  margin-bottom:10px; letter-spacing:.5px;
+}
+.sc-name { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:400; color:#fff; display:flex; align-items:baseline; gap:8px; }
+.sc-age { font-family:'Outfit',sans-serif; font-size:15px; font-weight:300; color:rgba(255,255,255,.45); }
+.sc-loc { font-size:12px; color:rgba(255,255,255,.4); margin:3px 0 10px; }
+.sc-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.sc-tag { padding:3px 10px; border-radius:100px; font-size:10px; background:rgba(255,255,255,.1); backdrop-filter:blur(6px); color:rgba(255,255,255,.65); }
+.sc-vbadge { position:absolute; top:14px; right:14px; background:rgba(12,11,9,.7); backdrop-filter:blur(10px); border:1px solid var(--app-rim2); border-radius:100px; padding:4px 10px; font-size:9px; letter-spacing:1.5px; color:var(--amber); text-transform:uppercase; }
+.sc-online { position:absolute; top:14px; left:14px; width:9px; height:9px; background:#52d68a; border-radius:50%; box-shadow:0 0 0 3px rgba(82,214,138,.2); animation:ppls 2s infinite; }
+@keyframes ppls { 0%,100%{box-shadow:0 0 0 3px rgba(82,214,138,.15)} 50%{box-shadow:0 0 0 6px rgba(82,214,138,.05)} }
+.sc-like-lbl,.sc-nope-lbl { position:absolute; top:24px; border:2.5px solid; border-radius:7px; padding:6px 12px; font-size:13px; font-weight:700; letter-spacing:2px; opacity:0; }
+.sc-like-lbl { right:16px; color:#52d68a; border-color:#52d68a; transform:rotate(14deg); }
+.sc-nope-lbl { left:16px; color:var(--coral); border-color:var(--coral); transform:rotate(-14deg); }
+
+/* Action bar */
+.deck-actions { display:flex; align-items:center; justify-content:center; gap:14px; }
+.da { display:flex; align-items:center; justify-content:center; border:none; border-radius:50%; cursor:pointer; transition:all .25s; }
+.da-sm { width:46px; height:46px; background:var(--app-card); font-size:18px; color:var(--mist); }
+.da-sm:hover { background:var(--app-lift); color:var(--cream); transform:scale(1.05); }
+.da-pass { width:54px; height:54px; background:var(--app-card); color:var(--coral); font-size:22px; border:1.5px solid rgba(217,95,114,.2); }
+.da-pass:hover { background:rgba(217,95,114,.1); border-color:var(--coral); }
+.da-like { width:66px; height:66px; background:linear-gradient(135deg,var(--coral),var(--coral2)); color:#fff; font-size:26px; box-shadow:0 8px 28px rgba(217,95,114,.38); }
+.da-like:hover { transform:scale(1.08); box-shadow:0 14px 36px rgba(217,95,114,.5); }
+.da-star { width:54px; height:54px; background:var(--app-card); color:var(--amber); font-size:20px; border:1.5px solid rgba(212,146,90,.22); }
+.da-star:hover { background:rgba(212,146,90,.1); border-color:var(--amber); }
+.da-rew { color:var(--mist); }
+.da-bst { color:var(--sage); }
+.deck-meta { font-size:11px; color:var(--fog); margin-top:12px; text-align:center; }
+
+/* ─── TAB: MATCHES ─── */
+#tab-matches { padding:20px; }
+.tab-hd { margin-bottom:22px; }
+.tab-hd h2 { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:400; color:var(--cream); }
+.tab-hd p { font-size:13px; color:var(--mist); margin-top:3px; }
+
+/* New bubbles */
+.bubbles-row { display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; margin-bottom:24px; scrollbar-width:none; }
+.bubbles-row::-webkit-scrollbar { display:none; }
+.bub { display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; flex-shrink:0; }
+.bub-av {
+  width:58px; height:58px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:26px; position:relative; background:var(--app-card);
+  border:2.5px solid var(--coral); transition:border-color .2s;
+}
+.bub-av:hover { border-color:var(--amber); }
+.bub-dot { position:absolute; bottom:1px; right:1px; width:12px; height:12px; background:#52d68a; border-radius:50%; border:2px solid var(--app-bg); }
+.bub-n { font-size:11px; color:var(--mist); text-align:center; font-weight:300; }
+
+/* Match grid */
+.m-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.m-card {
+  background:var(--app-card); border-radius:18px; overflow:hidden;
+  cursor:pointer; border:1px solid var(--app-rim); transition:transform .32s cubic-bezier(.2,.8,.3,1), box-shadow .32s;
+}
+.m-card:hover { transform:translateY(-6px); box-shadow:0 20px 50px rgba(0,0,0,.6); }
+.mc-ph { width:100%; aspect-ratio:3/4; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+.mc-shade { position:absolute; inset:0; background:linear-gradient(to top,rgba(12,11,9,1) 0%,rgba(12,11,9,.28) 52%,transparent 100%); }
+.mc-pct-wrap { position:absolute; bottom:64px; left:11px; right:11px; }
+.mc-pct-lbl { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--amber); margin-bottom:3px; font-weight:500; }
+.mc-pct-bar { height:2px; background:rgba(255,255,255,.07); border-radius:1px; }
+.mc-pct-fill { height:100%; border-radius:1px; background:linear-gradient(90deg,var(--amber),var(--amber2)); }
+.mc-bdg { position:absolute; top:10px; right:10px; padding:3px 9px; border-radius:100px; font-size:9px; letter-spacing:1px; text-transform:uppercase; background:linear-gradient(135deg,var(--amber),var(--amber2)); color:var(--app-bg); font-weight:600; }
+.mc-bdg.new { background:linear-gradient(135deg,var(--sage),#a0dece); }
+.mc-online { position:absolute; top:10px; left:10px; width:9px; height:9px; background:#52d68a; border-radius:50%; animation:ppls 2s infinite; }
+.mc-body { padding:10px 12px 13px; }
+.mc-name { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--cream); display:flex; align-items:baseline; gap:6px; margin-bottom:2px; }
+.mc-age { font-family:'Outfit',sans-serif; font-size:12px; color:var(--mist); font-weight:300; }
+.mc-loc { font-size:11px; color:var(--mist); margin-bottom:8px; }
+.mc-tags { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:9px; }
+.mc-tag { padding:2px 8px; border-radius:100px; font-size:9px; background:rgba(212,146,90,.08); border:1px solid rgba(212,146,90,.18); color:var(--amber); }
+.mc-acts { display:flex; gap:6px; }
+.mc-btn {
+  flex:1; padding:9px 5px; border-radius:9px; border:none; font-size:10px;
+  font-weight:500; letter-spacing:.3px; text-transform:uppercase; cursor:pointer;
+  transition:all .2s; font-family:'Outfit',sans-serif; display:flex; align-items:center; justify-content:center; gap:3px;
+}
+.mc-ai { background:rgba(212,146,90,.1); border:1px solid rgba(212,146,90,.22); color:var(--amber); }
+.mc-ai:hover { background:var(--amber); color:var(--app-bg); }
+.mc-ch { background:var(--app-lift); color:var(--mist); }
+.mc-ch:hover { color:var(--cream); background:rgba(255,249,236,.08); }
+
+/* ─── TAB: AI DATE ─── */
+#tab-ai { padding:20px; }
+/* hero banner */
+.ai-hero {
+  background:linear-gradient(135deg,rgba(212,146,90,.12),rgba(91,191,170,.06));
+  border:1px solid rgba(212,146,90,.2); border-radius:18px;
+  padding:22px 20px; margin-bottom:20px; position:relative; overflow:hidden;
+}
+.ai-hero::before { content:'✦'; position:absolute; top:-10px; right:20px; font-size:80px; color:rgba(212,146,90,.08); pointer-events:none; }
+.ai-hero-label { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--amber); margin-bottom:8px; }
+.ai-hero-h { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:400; color:var(--cream); margin-bottom:5px; }
+.ai-hero-p { font-size:13px; color:var(--mist); line-height:1.6; }
+
+/* Match selector */
+.sec-label { font-size:10px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--mist); margin-bottom:10px; }
+.ms-row { display:flex; gap:10px; overflow-x:auto; margin-bottom:22px; scrollbar-width:none; padding-bottom:2px; }
+.ms-row::-webkit-scrollbar { display:none; }
+.ms-item { display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; flex-shrink:0; }
+.ms-av {
+  width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:22px; border:2px solid var(--app-rim2); background:var(--app-card); transition:all .22s;
+}
+.ms-item.on .ms-av { border-color:var(--amber); box-shadow:0 0 0 3px rgba(212,146,90,.18); }
+.ms-n { font-size:10px; color:var(--mist); font-weight:300; }
+.ms-item.on .ms-n { color:var(--amber); font-weight:500; }
+
+/* Config card */
+.ai-cfg { background:var(--app-card); border:1px solid var(--app-rim); border-radius:18px; padding:20px; margin-bottom:16px; }
+.ai-cfg-h { font-size:13px; font-weight:500; color:var(--cream); margin-bottom:16px; display:flex; align-items:center; gap:7px; }
+.ai-cfg-h span { color:var(--amber); }
+/* Style pills */
+.style-pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.sp {
+  padding:8px 14px; border-radius:100px; border:1px solid var(--app-rim2);
+  background:transparent; color:var(--mist); font-size:12px; cursor:pointer;
+  transition:all .2s; font-family:'Outfit',sans-serif; font-weight:400;
+}
+.sp:hover { color:var(--cream); border-color:var(--app-rim2); }
+.sp.on { border-color:var(--amber); color:var(--amber); background:rgba(212,146,90,.08); }
+/* Selects */
+.cfg-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.cg { display:flex; flex-direction:column; gap:5px; }
+.cg label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--mist); }
+.cg select {
+  background:var(--app-lift); border:1px solid var(--app-rim2); border-radius:10px;
+  color:var(--cream); font-size:13px; padding:10px 12px; outline:none; transition:border-color .2s; font-family:'Outfit',sans-serif;
+}
+.cg select:focus { border-color:var(--amber); }
+.cg select option { background:var(--app-surf); }
+.cfg-inp {
+  width:100%; background:var(--app-lift); border:1px solid var(--app-rim2); border-radius:10px;
+  color:var(--cream); font-size:13px; padding:10px 13px; outline:none;
+  transition:border-color .2s; margin-bottom:16px; font-family:'Outfit',sans-serif;
+}
+.cfg-inp:focus { border-color:var(--amber); }
+.cfg-inp::placeholder { color:var(--fog); }
+/* Generate btn */
+.gen-btn {
+  width:100%; padding:16px; border-radius:13px; border:none; cursor:pointer;
+  background:linear-gradient(135deg,var(--amber),var(--amber2));
+  color:var(--app-bg); font-family:'Outfit',sans-serif; font-size:13px; font-weight:600;
+  letter-spacing:.8px; text-transform:uppercase;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:all .3s; box-shadow:0 8px 28px rgba(212,146,90,.22);
+}
+.gen-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 16px 36px rgba(212,146,90,.32); }
+.gen-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+/* AI Loading */
+.ai-load { background:var(--app-card); border:1px solid var(--app-rim); border-radius:18px; padding:44px 24px; text-align:center; display:none; margin-bottom:16px; }
+.ai-load.on { display:block; }
+.load-ring {
+  width:58px; height:58px; border-radius:50%; margin:0 auto 20px;
+  background:conic-gradient(var(--amber) 0%,var(--amber2) 40%,transparent 40%);
+  animation:spin 1s linear infinite; position:relative;
+}
+.load-ring::after { content:'✦'; position:absolute; inset:7px; background:var(--app-card); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:17px; color:var(--amber); }
+@keyframes spin { to{transform:rotate(360deg)} }
+.load-txt { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:18px; color:var(--mist); animation:breathe 2s ease infinite; margin-bottom:16px; }
+@keyframes breathe { 0%,100%{opacity:.45} 50%{opacity:1} }
+.load-steps { display:flex; flex-direction:column; gap:6px; }
+.lst { font-size:12px; color:var(--fog); opacity:0; transition:opacity .5s,transform .4s; transform:translateY(5px); display:flex; align-items:center; justify-content:center; gap:6px; }
+.lst::before { content:''; width:4px; height:4px; border-radius:50%; background:var(--amber); flex-shrink:0; }
+.lst.v { opacity:1; transform:none; }
+
+/* AI Result */
+.ai-res { background:var(--app-card); border:1px solid rgba(212,146,90,.2); border-radius:18px; padding:22px; display:none; margin-bottom:16px; animation:slideUp .45s ease both; }
+.ai-res.on { display:block; }
+@keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+.res-eyebrow { display:inline-flex; align-items:center; gap:6px; background:rgba(212,146,90,.1); border:1px solid rgba(212,146,90,.22); border-radius:100px; padding:4px 13px; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--amber); font-weight:500; margin-bottom:12px; }
+.res-h { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:400; color:var(--cream); margin-bottom:5px; line-height:1.15; }
+.res-tl { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:15px; color:var(--amber2); margin-bottom:8px; }
+.res-vibe { font-size:13px; color:var(--mist); margin-bottom:18px; }
+.res-sec { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--app-rim); }
+.res-sec:last-of-type { margin-bottom:0; padding-bottom:0; border-bottom:none; }
+.res-lbl { font-size:10px; font-weight:500; letter-spacing:2px; text-transform:uppercase; color:var(--amber); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.res-lbl::after { content:''; flex:1; height:1px; background:var(--app-rim); }
+.res-txt { font-size:13px; line-height:1.78; color:rgba(245,239,228,.62); }
+.dchips { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:11px 0; }
+.dchip { background:rgba(212,146,90,.05); border:1px solid var(--app-rim); border-radius:11px; padding:11px 7px; text-align:center; }
+.dchip-i { font-size:16px; margin-bottom:4px; }
+.dchip-v { font-size:12px; color:var(--cream); margin-bottom:2px; font-weight:500; }
+.dchip-k { font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--mist); }
+.convos { display:flex; flex-direction:column; gap:6px; }
+.convo { background:rgba(212,146,90,.05); border-left:2px solid var(--amber); padding:9px 13px; border-radius:0 10px 10px 0; font-size:13px; font-style:italic; color:rgba(245,239,228,.6); line-height:1.55; }
+.spec-box { background:linear-gradient(135deg,rgba(212,146,90,.07),rgba(91,191,170,.04)); border:1px solid rgba(212,146,90,.18); border-radius:12px; padding:14px 16px; }
+.spec-box p { font-size:13px; line-height:1.72; color:var(--cream); }
+.spec-box.rose-b { border-color:rgba(217,95,114,.18); background:linear-gradient(135deg,rgba(217,95,114,.06),rgba(212,146,90,.03)); }
+.warn-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.warn-chip { background:rgba(217,95,114,.07); border:1px solid rgba(217,95,114,.2); color:var(--coral2); font-size:10px; padding:4px 10px; border-radius:100px; }
+.res-acts { display:flex; gap:8px; margin-top:18px; flex-wrap:wrap; }
+.btn-amber { padding:13px 16px; border-radius:11px; background:linear-gradient(135deg,var(--amber),var(--amber2)); color:var(--app-bg); border:none; font-size:12px; font-weight:600; cursor:pointer; transition:all .22s; font-family:'Outfit',sans-serif; flex:1; }
+.btn-amber:hover { opacity:.9; transform:translateY(-1px); }
+.btn-ghost-app { padding:13px 12px; border-radius:11px; background:var(--app-lift); color:var(--mist); border:1px solid var(--app-rim); font-size:12px; cursor:pointer; transition:all .22s; font-family:'Outfit',sans-serif; }
+.btn-ghost-app:hover { color:var(--cream); border-color:var(--app-rim2); }
+
+/* ─── TAB: CHAT ─── */
+#tab-chat { padding:0; overflow:hidden; }
+.chat-wrap { display:flex; flex-direction:column; height:100%; }
+.ch-top {
+  padding:13px 18px; border-bottom:1px solid var(--app-rim);
+  display:flex; align-items:center; gap:12px;
+}
+.ch-av { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; position:relative; flex-shrink:0; }
+.ch-dot { position:absolute; bottom:1px; right:1px; width:11px; height:11px; background:#52d68a; border-radius:50%; border:2px solid var(--app-bg); }
+.ch-name { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--cream); }
+.ch-status { font-size:11px; color:var(--sage); }
+.ch-top-right { margin-left:auto; display:flex; gap:7px; }
+.ch-body {
+  flex:1; overflow-y:auto; padding:16px 18px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.ch-body::-webkit-scrollbar { width:3px; }
+.ch-body::-webkit-scrollbar-thumb { background:var(--app-rim2); border-radius:2px; }
+.msg { display:flex; gap:8px; max-width:77%; animation:msgIn .25s ease both; }
+@keyframes msgIn { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:none} }
+.msg.me { flex-direction:row-reverse; align-self:flex-end; }
+.msg-av { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; align-self:flex-end; flex-shrink:0; }
+.msg-bbl { padding:10px 14px; border-radius:16px; font-size:13px; line-height:1.56; }
+.msg.them .msg-bbl { background:var(--app-card); border:1px solid var(--app-rim); color:var(--cream); border-radius:3px 16px 16px 16px; }
+.msg.me .msg-bbl { background:linear-gradient(135deg,var(--amber),var(--amber2)); color:var(--app-bg); font-weight:500; border-radius:16px 16px 3px 16px; }
+.msg-time { font-size:10px; color:var(--fog); align-self:flex-end; margin-bottom:1px; }
+.typing-bbl { display:flex; gap:4px; padding:11px 15px; background:var(--app-card); border:1px solid var(--app-rim); border-radius:3px 16px 16px 16px; width:52px; }
+.td { width:6px; height:6px; border-radius:50%; background:var(--mist); animation:tb .75s ease infinite; }
+.td:nth-child(2){animation-delay:.15s}.td:nth-child(3){animation-delay:.3s}
+@keyframes tb { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+.date-bubble { background:var(--app-card); border:1px solid rgba(212,146,90,.22); border-radius:16px; padding:14px; margin:4px 0; max-width:290px; }
+.db-pill { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--amber); font-weight:500; margin-bottom:6px; }
+.db-h { font-family:'Cormorant Garamond',serif; font-size:16px; color:var(--cream); margin-bottom:3px; }
+.db-sub { font-size:11px; color:var(--mist); margin-bottom:9px; line-height:1.5; }
+.db-chips { display:flex; gap:5px; flex-wrap:wrap; }
+.db-chip { padding:3px 9px; border-radius:100px; background:rgba(212,146,90,.09); border:1px solid rgba(212,146,90,.2); font-size:10px; color:var(--amber); }
+.ch-input-row { padding:12px 16px; border-top:1px solid var(--app-rim); display:flex; gap:8px; align-items:center; }
+.ch-inp {
+  flex:1; background:var(--app-card); border:1px solid var(--app-rim2); border-radius:100px;
+  color:var(--cream); font-size:13px; padding:10px 16px; outline:none;
+  transition:border-color .2s; font-family:'Outfit',sans-serif;
+}
+.ch-inp:focus { border-color:var(--amber); }
+.ch-inp::placeholder { color:var(--fog); }
+.ch-send-btn {
+  width:40px; height:40px; border-radius:50%; border:none;
+  background:linear-gradient(135deg,var(--amber),var(--amber2));
+  color:var(--app-bg); font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:transform .2s; flex-shrink:0;
+}
+.ch-send-btn:hover { transform:scale(1.08); }
+
+/* ─── TAB: LIKES ─── */
+#tab-likes { padding:20px; }
+.likes-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:18px; }
+.lc { background:var(--app-card); border-radius:16px; overflow:hidden; cursor:pointer; border:1px solid var(--app-rim); transition:transform .25s; position:relative; }
+.lc:hover { transform:translateY(-4px); }
+.lc-ph { width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; position:relative; }
+.lc-blur { position:absolute; inset:0; backdrop-filter:blur(14px); background:rgba(12,11,9,.25); }
+.lc-lock { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
+.lc-lock-i { font-size:20px; }
+.lc-lock-l { font-size:10px; font-weight:600; color:var(--amber); letter-spacing:1px; }
+.lc-heart { position:absolute; top:8px; right:8px; font-size:14px; color:var(--coral); }
+.lc-body { padding:9px 11px 12px; }
+.lc-name { font-size:14px; color:var(--cream); font-weight:400; }
+.lc-name.blur { filter:blur(5px); color:var(--mist); }
+.lc-meta { font-size:11px; color:var(--mist); margin-top:2px; }
+.likes-upsell {
+  background:linear-gradient(135deg,rgba(212,146,90,.08),rgba(217,95,114,.05));
+  border:1px solid rgba(212,146,90,.18); border-radius:18px; padding:20px;
+  display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+}
+.lu-ico { font-size:30px; flex-shrink:0; }
+.lu-t h4 { font-size:15px; font-weight:500; color:var(--cream); margin-bottom:4px; }
+.lu-t p { font-size:12px; color:var(--mist); line-height:1.55; }
+.lu-btn {
+  margin-left:auto; padding:10px 18px; border-radius:100px; background:var(--amber);
+  color:var(--app-bg); border:none; font-size:12px; font-weight:600; cursor:pointer;
+  transition:opacity .2s; white-space:nowrap; flex-shrink:0; font-family:'Outfit',sans-serif;
+}
+.lu-btn:hover { opacity:.85; }
+
+/* ─── TAB: PROFILE ─── */
+#tab-profile { padding:0; }
+.prof-hero-bg {
+  background:linear-gradient(160deg,rgba(212,146,90,.12),rgba(12,11,9,0));
+  padding:32px 20px 24px; border-bottom:1px solid var(--app-rim);
+  display:flex; flex-direction:column; align-items:center; gap:14px;
+}
+.prof-av-big {
+  width:80px; height:80px; border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--coral));
+  display:flex; align-items:center; justify-content:center;
+  font-size:36px; border:3px solid rgba(212,146,90,.38);
+}
+.prof-name { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:400; color:var(--cream); }
+.prof-meta { font-size:12px; color:var(--mist); font-weight:300; }
+.tier-pill { padding:5px 14px; border-radius:100px; font-size:11px; font-weight:500; display:inline-flex; align-items:center; gap:5px; }
+.tp-free { background:var(--app-card); border:1px solid var(--app-rim2); color:var(--mist); }
+.tp-gold { background:rgba(212,146,90,.12); border:1px solid rgba(212,146,90,.28); color:var(--amber); }
+.tp-plat { background:rgba(155,127,232,.12); border:1px solid rgba(155,127,232,.28); color:#c4aef5; }
+/* Stats */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:16px 20px; }
+.stat-box { background:var(--app-card); border:1px solid var(--app-rim); border-radius:13px; padding:13px 6px; text-align:center; }
+.sb-n { font-family:'Cormorant Garamond',serif; font-size:26px; color:var(--amber); line-height:1; }
+.sb-l { font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--mist); margin-top:4px; }
+/* Menu */
+.menu-list { margin:0 20px 16px; background:var(--app-card); border-radius:18px; overflow:hidden; border:1px solid var(--app-rim); }
+.mi {
+  display:flex; align-items:center; gap:13px; padding:14px 16px;
+  border-bottom:1px solid var(--app-rim); cursor:pointer;
+  transition:background .2s; border:none; background:none; width:100%; text-align:left;
+  font-family:'Outfit',sans-serif; border-bottom:1px solid var(--app-rim);
+}
+.mi:last-child { border-bottom:none; }
+.mi:hover { background:var(--app-lift); }
+.mi-ico { width:33px; height:33px; border-radius:9px; background:var(--app-lift); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.mi-label { font-size:14px; color:var(--cream); font-weight:400; }
+.mi-sub { font-size:11px; color:var(--mist); margin-top:2px; }
+.mi-right { margin-left:auto; display:flex; align-items:center; gap:6px; }
+.mi-arrow { color:var(--fog); font-size:18px; }
+.mi-badge { background:var(--amber); color:var(--app-bg); font-size:9px; font-weight:700; padding:2px 8px; border-radius:100px; }
+/* toggle */
+.toggle { width:42px; height:23px; background:var(--app-lift); border:1px solid var(--app-rim2); border-radius:100px; position:relative; cursor:pointer; transition:background .25s; flex-shrink:0; }
+.toggle.on { background:var(--amber); border-color:var(--amber); }
+.toggle::after { content:''; position:absolute; width:17px; height:17px; background:#fff; border-radius:50%; top:2px; left:2px; transition:transform .25s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.toggle.on::after { transform:translateX(19px); }
+
+/* PREMIUM SHEET */
+.prem-h { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:400; color:var(--cream); text-align:center; margin-bottom:4px; }
+.prem-sub { font-size:13px; color:var(--mist); text-align:center; margin-bottom:20px; line-height:1.6; font-weight:300; }
+.bill-row { display:flex; justify-content:center; margin-bottom:20px; }
+.bill-tg { display:inline-flex; background:var(--app-lift); border:1px solid var(--app-rim2); border-radius:100px; padding:3px; gap:3px; }
+.bto { padding:7px 18px; border-radius:100px; border:none; background:transparent; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--mist); cursor:pointer; transition:all .2s; font-family:'Outfit',sans-serif; position:relative; }
+.bto.on { background:var(--amber); color:var(--app-bg); font-weight:600; }
+.bto-save { background:var(--coral); color:#fff; font-size:8px; font-weight:700; padding:2px 6px; border-radius:100px; position:absolute; top:-8px; right:-6px; white-space:nowrap; }
+.plans-stack { display:flex; flex-direction:column; gap:9px; margin-bottom:20px; }
+.plan-r {
+  background:var(--app-card); border:1.5px solid var(--app-rim); border-radius:15px;
+  padding:16px 18px; cursor:pointer; display:flex; align-items:center; gap:14px;
+  transition:border-color .22s; position:relative;
+}
+.plan-r:hover { border-color:var(--app-rim2); }
+.plan-r.hl { border-color:var(--amber); background:rgba(212,146,90,.04); }
+.plan-r.hl2 { border-color:rgba(155,127,232,.35); background:rgba(155,127,232,.04); }
+.pr-pop { position:absolute; top:-11px; left:50%; transform:translateX(-50%); background:var(--amber); color:var(--app-bg); font-size:9px; font-weight:700; padding:3px 12px; border-radius:100px; letter-spacing:1px; white-space:nowrap; }
+.pr-ico { font-size:26px; flex-shrink:0; }
+.pr-inf { flex:1; }
+.pr-name { font-size:15px; font-weight:600; color:var(--cream); margin-bottom:2px; }
+.pr-desc { font-size:12px; color:var(--mist); }
+.pr-price { text-align:right; flex-shrink:0; }
+.pr-amt { font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--amber); font-weight:400; }
+.pr-amt.plat { color:#c4aef5; }
+.pr-per { font-size:10px; color:var(--fog); }
+/* Feature list */
+.feats-box { background:var(--app-lift); border-radius:13px; padding:15px 16px; margin-bottom:18px; }
+.fb-title { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--mist); margin-bottom:11px; }
+.fb-item { display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--cream); padding:6px 0; border-bottom:1px solid var(--app-rim); font-weight:300; }
+.fb-item:last-child { border-bottom:none; }
+.fb-check { color:var(--amber); font-size:13px; flex-shrink:0; margin-top:1px; }
+/* Addons */
+.addons-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px; }
+.addon-c { background:var(--app-card); border:1px solid var(--app-rim); border-radius:13px; padding:14px 12px; cursor:pointer; transition:border-color .22s; }
+.addon-c:hover { border-color:var(--amber); }
+.addon-ico { font-size:22px; margin-bottom:7px; }
+.addon-nm { font-size:13px; color:var(--cream); font-weight:500; margin-bottom:3px; }
+.addon-dc { font-size:11px; color:var(--mist); line-height:1.45; margin-bottom:9px; }
+.addon-pr { font-size:15px; color:var(--amber); font-weight:600; font-family:'Cormorant Garamond',serif; }
+.guarantee-box { background:rgba(91,191,170,.06); border:1px solid rgba(91,191,170,.16); border-radius:13px; padding:14px 16px; display:flex; gap:12px; align-items:flex-start; }
+.gb-ico { font-size:20px; flex-shrink:0; margin-top:1px; }
+.gb-h { font-size:13px; color:var(--cream); font-weight:500; margin-bottom:3px; }
+.gb-p { font-size:12px; color:var(--mist); line-height:1.55; }
+
+/* BOOST SHEET */
+.boost-ring-big {
+  width:76px; height:76px; border-radius:50%; margin:0 auto 18px;
+  background:conic-gradient(#b8a0f0,#c4aef5,transparent);
+  animation:spin 2.5s linear infinite; position:relative; display:flex; align-items:center; justify-content:center;
+}
+.brb-inner { position:absolute; inset:7px; background:var(--app-surf); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; }
+
+@media(max-width:600px) {
+  .l-hero { grid-template-columns:1fr; padding:52px 24px 60px; }
+  .l-right { display:none; }
+  .l-nav { padding:20px 24px; }
+  .l-stats { padding:28px 24px; gap:32px; }
+  .dchips,.cfg-grid { grid-template-columns:1fr 1fr; }
+  .stats-row { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<div id="toasts"></div>
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeSheet()">
+  <div class="modal-sheet" id="modal-sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LANDING
+══════════════════════════════════════════ -->
+<div id="s-land" class="screen on">
+  <nav class="l-nav">
+    <div class="l-logo">Amoré</div>
+    <div class="l-nav-r">
+      <button class="l-btn" onclick="openLogin()">Anmelden</button>
+      <button class="l-btn solid" onclick="startOnb()">Kostenlos starten</button>
+    </div>
+  </nav>
+
+  <div class="l-hero">
+    <div class="l-left">
+      <div class="l-eyebrow">Designed to be deleted</div>
+      <h1 class="l-h1">
+        Echte<br>Verbindungen,<br><em>echte</em> <strong>Liebe.</strong>
+      </h1>
+      <p class="l-p">Amoré versteht deine Persönlichkeit wirklich — und plant euer erstes Date automatisch. Powered by KI, gemacht für Menschen.</p>
+      <div class="l-actions">
+        <button class="l-cta-main" onclick="startOnb()">Jetzt kostenlos starten</button>
+        <button class="l-cta-sec" onclick="quickDemo()">Demo ansehen →</button>
+      </div>
+      <div class="l-trust">
+        <span>🔒 Verifizierte Profile</span>
+        <div class="l-trust-dot"></div>
+        <span>✦ KI-Date-Planer</span>
+        <div class="l-trust-dot"></div>
+        <span>Jederzeit kündbar</span>
+      </div>
+    </div>
+    <div class="l-right">
+      <div class="l-card-stack">
+        <div class="l-card l-card-1">
+          <div class="l-card-inner" style="background:linear-gradient(160deg,#1a0f2d,#2e1040,#150f25);">
+            <div class="lc-grad"></div>
+            <div class="lc-body">
+              <div class="lc-match">✦ 88% Match</div>
+              <div class="lc-name">Sophia, 29</div>
+              <div class="lc-sub">📍 Bern · Bergführerin</div>
+            </div>
+          </div>
+        </div>
+        <div class="l-card l-card-2">
+          <div class="l-card-inner" style="background:linear-gradient(160deg,#150f2a,#280f3f,#100f22);">
+            <div class="lc-grad"></div>
+            <div class="lc-body">
+              <div class="lc-match">✦ 94% Match</div>
+              <div class="lc-name">Lena, 26</div>
+              <div class="lc-sub">📍 Zürich · Designerin</div>
+              <div class="lc-tags"><span class="lc-tag">Kunst</span><span class="lc-tag">Reisen</span><span class="lc-tag">Wein</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="l-chip ch-1"><div class="ci">💕</div><div class="cl">Neues Match!</div><div class="cs">Lena mag dich auch</div></div>
+        <div class="l-chip ch-2"><div class="ci">✦</div><div class="cl">KI-Date bereit</div><div class="cs">Dein Plan wartet</div></div>
+        <div class="l-chip ch-3"><div class="ci">🗓</div><div class="cl">Sa. 19 Uhr</div><div class="cs">Rathausbrücke, Zürich</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l-stats">
+    <div class="l-stat"><span class="l-stat-n">2.4M</span><div class="l-stat-l">Aktive Mitglieder</div></div>
+    <div class="l-stat"><span class="l-stat-n">97K</span><div class="l-stat-l">Paare gebildet</div></div>
+    <div class="l-stat"><span class="l-stat-n">94%</span><div class="l-stat-l">Zufriedenheit</div></div>
+    <div class="l-stat"><span class="l-stat-n">4.9★</span><div class="l-stat-l">App-Bewertung</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ONBOARDING
+══════════════════════════════════════════ -->
+<div id="s-onboard" class="screen">
+  <div class="onb-wrap">
+    <div class="onb-prog-row" id="onb-prog"></div>
+    <div class="onb-card">
+      <div class="onb-card-body">
+        <div class="onb-step-lbl" id="onb-lbl">Schritt 1 von 4</div>
+        <div class="onb-h" id="onb-h">Erzähl uns von dir</div>
+        <div class="onb-sub" id="onb-sub">Nur echte Menschen. 60 Sekunden genügen.</div>
+
+        <div class="ostep on" id="os1">
+          <div style="margin-bottom:18px;">
+            <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--land-mid);margin-bottom:10px;">Dein Avatar</div>
+            <div class="av-strip" id="av-strip"></div>
+          </div>
+          <div class="f2">
+            <div class="fg"><label>Vorname</label><input id="fn" value="Mia" placeholder="Name"></div>
+            <div class="fg"><label>Alter</label><input id="fa" type="number" value="27" min="18"></div>
+          </div>
+          <div class="f2">
+            <div class="fg"><label>Stadt</label><input id="fc" value="Zürich"></div>
+            <div class="fg"><label>Ich suche</label><select id="fsk"><option>Eine Frau</option><option selected>Einen Mann</option><option>Alle</option></select></div>
+          </div>
+          <div class="f1"><div class="fg"><label>Über dich</label><textarea id="fbio">Ich liebe Berge, frischen Kaffee und Gespräche, die bis in die Nacht gehen.</textarea></div></div>
+        </div>
+
+        <div class="ostep" id="os2">
+          <div class="onb-h" id="quiz-q" style="font-size:20px;margin-bottom:18px;"></div>
+          <div class="qopts" id="quiz-opts"></div>
+        </div>
+
+        <div class="ostep" id="os3">
+          <div class="chip-grid" id="chip-grid"></div>
+        </div>
+
+        <div class="ostep" id="os4">
+          <div class="dpg" id="dpg"></div>
+        </div>
+      </div>
+      <div class="onb-footer">
+        <button class="onb-bk" id="onb-bk" onclick="prevStep()">← Zurück</button>
+        <button class="onb-nxt" id="onb-nxt" onclick="nextStep()">Weiter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     APP
+══════════════════════════════════════════ -->
+<div id="s-app">
+  <header class="app-bar">
+    <div class="ab-logo">Amoré</div>
+    <div class="ab-right">
+      <button class="ab-btn" title="Boost" onclick="openBoostSheet()">⚡</button>
+      <button class="ab-btn" title="Premium" style="color:var(--amber);" onclick="openPremSheet()">✦</button>
+      <div class="ab-avatar" id="app-av" onclick="gotoTab('profile')">👤</div>
+    </div>
+  </header>
+
+  <main class="app-content">
+
+    <!-- DISCOVER -->
+    <div id="tab-discover" class="app-tab on">
+      <div class="disc-hd">
+        <div class="disc-hd-left"><h2>Entdecken</h2><p id="disc-sub">Deine heutigen Profiles</p></div>
+        <div class="disc-hd-right">
+          <button class="filter-pill on" onclick="fpill(this)">Alle</button>
+          <button class="filter-pill" onclick="fpill(this)">Nahe</button>
+        </div>
+      </div>
+      <div class="lim-row">
+        <div class="lim-chip" id="lim-likes">♥ <strong id="likes-n">10</strong> Likes</div>
+        <div class="lim-chip" id="lim-stars">★ <strong id="stars-n">1</strong> Super</div>
+      </div>
+      <div class="deck-area">
+        <div class="deck-wrap" id="deck-wrap"></div>
+        <div class="deck-actions">
+          <button class="da da-sm da-rew" onclick="doRewind()" title="Rückgängig">↩</button>
+          <button class="da da-pass" onclick="swipe('left')" title="Pass">✕</button>
+          <button class="da da-like" onclick="swipe('right')" title="Like">♥</button>
+          <button class="da da-star" onclick="doSuperLike()" title="Super Like">★</button>
+          <button class="da da-sm da-bst" onclick="openBoostSheet()" title="Boost">⚡</button>
+        </div>
+        <div class="deck-meta" id="deck-meta"></div>
+      </div>
+    </div>
+
+    <!-- MATCHES -->
+    <div id="tab-matches" class="app-tab">
+      <div style="padding:20px;">
+        <div class="tab-hd"><h2>Matches</h2><p id="match-sub-lbl">Wähle eins für KI-Date-Planung ✦</p></div>
+        <div class="sec-label" style="margin-bottom:10px;">Neu</div>
+        <div class="bubbles-row" id="bubbles-row"></div>
+        <div class="sec-label" style="margin-bottom:10px;">Alle Matches</div>
+        <div class="m-grid" id="m-grid"></div>
+      </div>
+    </div>
+
+    <!-- AI DATE -->
+    <div id="tab-ai" class="app-tab">
+      <div style="padding:20px;">
+        <div class="ai-hero">
+          <div class="ai-hero-label">✦ KI Date-Planer</div>
+          <div class="ai-hero-h">Euer perfektes erstes Date</div>
+          <div class="ai-hero-p">Wähle ein Match — die KI analysiert eure Profile und plant alles: Ort, Aktivität, Gesprächsstarter.</div>
+        </div>
+        <div class="sec-label" style="margin-bottom:10px;">Match wählen</div>
+        <div class="ms-row" id="ms-row"></div>
+        <div class="ai-cfg">
+          <div class="ai-cfg-h"><span>✦</span> Konfigurieren</div>
+          <div class="sec-label" style="margin-bottom:8px;">Stil</div>
+          <div class="style-pills" id="style-pills"></div>
+          <div class="cfg-grid">
+            <div class="cg"><label>Budget</label><select id="cfg-bgt"><option>Entspannt (bis 30€)</option><option selected>Mittel (30–80€)</option><option>Gehoben (80–150€)</option><option>Luxus (150€+)</option></select></div>
+            <div class="cg"><label>Tageszeit</label><select id="cfg-tod"><option>Morgens</option><option>Mittags</option><option selected>Nachmittags</option><option>Abends</option><option>Nachts</option></select></div>
+          </div>
+          <input class="cfg-inp" id="cfg-wish" placeholder="Besondere Wünsche? z.B. mag keine Bars…">
+          <button class="gen-btn" id="gen-btn" onclick="genDate()"><span style="font-size:16px;">✦</span> Perfektes Date planen</button>
+        </div>
+        <div class="ai-load" id="ai-load">
+          <div class="load-ring"></div>
+          <div class="load-txt">KI analysiert eure Profile…</div>
+          <div class="load-steps" id="load-steps"></div>
+        </div>
+        <div class="ai-res" id="ai-res">
+          <div id="res-html"></div>
+          <div class="res-acts">
+            <button class="btn-amber" onclick="acceptDate()">Date annehmen ♥</button>
+            <button class="btn-ghost-app" onclick="genDate()" style="min-width:52px;">↺</button>
+            <button class="btn-ghost-app" onclick="shareDate()" style="min-width:52px;">↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="tab-chat" class="app-tab">
+      <div class="chat-wrap">
+        <div class="ch-top">
+          <div class="ch-av" id="ch-av"><div class="ch-dot"></div></div>
+          <div><div class="ch-name" id="ch-name">Chat</div><div class="ch-status">● Online</div></div>
+          <div class="ch-top-right">
+            <button class="ab-btn" onclick="toast('📞 Anruf demnächst!')">📞</button>
+            <button class="ab-btn" onclick="gotoTab('ai')">🗓</button>
+          </div>
+        </div>
+        <div class="ch-body" id="ch-body"></div>
+        <div class="ch-input-row">
+          <input class="ch-inp" id="ch-inp" placeholder="Nachricht…" onkeydown="if(event.key==='Enter')sendMsg()">
+          <button class="ch-send-btn" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIKES -->
+    <div id="tab-likes" class="app-tab">
+      <div style="padding:20px;">
+        <div class="tab-hd" style="margin-bottom:18px;"><h2>Wer mag dich?</h2><p>Likes die du erhalten hast</p></div>
+        <div class="likes-grid" id="likes-grid"></div>
+        <div class="likes-upsell" id="likes-upsell" style="display:none;">
+          <div class="lu-ico">🔓</div>
+          <div class="lu-t"><h4>Alle sehen</h4><p>Mit <strong style="color:var(--amber);">Gold</strong> siehst du alle, die dich mögen.</p></div>
+          <button class="lu-btn" onclick="openPremSheet()">Gold →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="tab-profile" class="app-tab">
+      <div class="prof-hero-bg">
+        <div class="prof-av-big" id="prof-av">👤</div>
+        <div class="prof-name" id="prof-name">Mia</div>
+        <div class="prof-meta" id="prof-meta">📍 Zürich · 27</div>
+        <div class="tier-pill tp-free" id="tier-pill">✦ Basis</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="sb-n">247</div><div class="sb-l">Aufrufe</div></div>
+        <div class="stat-box"><div class="sb-n" style="color:var(--coral);">18</div><div class="sb-l">Likes</div></div>
+        <div class="stat-box"><div class="sb-n" id="stat-matches">0</div><div class="sb-l">Matches</div></div>
+        <div class="stat-box"><div class="sb-n" style="color:var(--sage);">3</div><div class="sb-l">Chats</div></div>
+      </div>
+      <div class="menu-list">
+        <button class="mi" onclick="openEditSheet()"><div class="mi-ico">✏️</div><div><div class="mi-label">Profil bearbeiten</div><div class="mi-sub">Foto, Bio, Interessen</div></div><div class="mi-right"><div class="mi-arrow">›</div></div></button>
+        <button class="mi" onclick="openPremSheet()"><div class="mi-ico" style="background:rgba(212,146,90,.12);">✦</div><div><div class="mi-label" style="color:var(--amber);">Upgrade auf Gold</div><div class="mi-sub">Unlimited Likes, Boosts & mehr</div></div><div class="mi-right"><div class="mi-badge">Neu</div><div class="mi-arrow">›</div></div></button>
+        <button class="mi" onclick="openSettingsSheet()"><div class="mi-ico">⚙️</div><div><div class="mi-label">Einstellungen</div><div class="mi-sub">Suche, Sichtbarkeit, Filter</div></div><div class="mi-right"><div class="mi-arrow">›</div></div></button>
+        <button class="mi" onclick="openSafetySheet()"><div class="mi-ico">🛡</div><div><div class="mi-label">Sicherheit & Datenschutz</div></div><div class="mi-right"><div class="mi-arrow">›</div></div></button>
+        <button class="mi" onclick="toast('👋 Bis bald!')"><div class="mi-ico">🚪</div><div><div class="mi-label">Abmelden</div></div><div class="mi-right"><div class="mi-arrow">›</div></div></button>
+      </div>
+    </div>
+
+  </main>
+
+  <nav class="bot-nav">
+    <button class="bn on" id="bn-discover" onclick="gotoTab('discover')"><div class="bn-ico">🔍</div><div class="bn-lbl">Entdecken</div></button>
+    <button class="bn" id="bn-matches" onclick="gotoTab('matches')"><div class="bn-ico">💕</div><div class="bn-lbl">Matches</div><div class="bn-badge" id="m-badge"></div></button>
+    <button class="bn" id="bn-ai" onclick="gotoTab('ai')"><div class="bn-ico">✦</div><div class="bn-lbl">KI-Date</div></button>
+    <button class="bn" id="bn-likes" onclick="gotoTab('likes')"><div class="bn-ico">❤️</div><div class="bn-lbl">Likes</div></button>
+    <button class="bn" id="bn-profile" onclick="gotoTab('profile')"><div class="bn-ico" id="bn-av">👤</div><div class="bn-lbl">Profil</div></button>
+  </nav>
+</div>
+
+<script>
+/* ══════════ STATE ══════════ */
+const S={
+  user:{name:'Mia',age:27,city:'Zürich',bio:'Ich liebe Berge, frischen Kaffee und Gespräche, die bis in die Nacht gehen.',av:'👩',interests:[],prefs:[],personality:[]},
+  plan:'free', bill:'m',
+  liked:[], passed:[], superLiked:[], lastPassed:null,
+  swipeIdx:0, likesLeft:10, starsLeft:1,
+  curMatch:null, curResult:null,
+  onbStep:1, selStyle:'Romantisch & Intim',
+};
+
+/* ══════════ DATA ══════════ */
+const AVTS=['👩','🧑‍🎤','👩‍🦱','👩‍🦰','🧑','👱‍♀️','🧕','👩‍🔬'];
+const INTS=[
+  {e:'🏔',l:'Wandern'},{e:'🎨',l:'Kunst'},{e:'🍷',l:'Wein'},{e:'📚',l:'Lesen'},
+  {e:'🌍',l:'Reisen'},{e:'🎵',l:'Musik'},{e:'🧘',l:'Yoga'},{e:'🍳',l:'Kochen'},
+  {e:'📸',l:'Fotografie'},{e:'🎭',l:'Theater'},{e:'🚴',l:'Radfahren'},{e:'🌱',l:'Natur'},
+  {e:'🎬',l:'Kino'},{e:'💃',l:'Tanzen'},{e:'☕',l:'Kaffee'},{e:'🏊',l:'Schwimmen'}
+];
+const DPRFS=[
+  {e:'🌄',l:'Draußen & Natur',d:'Parks, Berge, Wasser'},
+  {e:'🏙',l:'Stadtabenteuer',d:'Restaurants, Bars, Kultur'},
+  {e:'🎨',l:'Kreativ & Kultur',d:'Museen, Konzerte, Galerien'},
+  {e:'🤸',l:'Aktiv & Sport',d:'Klettern, Yoga, Bike'},
+  {e:'🛋',l:'Gemütlich & Cozy',d:'Café, Homey, Entspannt'},
+  {e:'⚡',l:'Spontan',d:'Überrasch mich!'}
+];
+const QUIZ=[
+  {q:'Dein perfektes Wochenende?',opts:[{e:'🏔',l:'Draußen aktiv',s:'Abenteuerlich'},{e:'📚',l:'Zu Hause lesen',s:'Introvertiert'},{e:'🎉',l:'Mit Freunden',s:'Gesellig'},{e:'🎨',l:'Kreativ sein',s:'Kreativ'}]},
+  {q:'Beim ersten Date zählt am meisten…',opts:[{e:'💬',l:'Tiefe Gespräche',s:'Intellektuell'},{e:'😂',l:'Viel Lachen',s:'Humorvoll'},{e:'✨',l:'Überraschungen',s:'Spontan'},{e:'🕯',l:'Romantik',s:'Romantisch'}]},
+  {q:'Freunde beschreiben dich als…',opts:[{e:'🌟',l:'Voller Energie',s:'Extrovertiert'},{e:'🌿',l:'Ruhig & tiefgründig',s:'Reflektiert'},{e:'🤗',l:'Warmherzig',s:'Empathisch'},{e:'🎯',l:'Zielorientiert',s:'Ambitioniert'}]}
+];
+const PROFILES=[
+  {id:1,name:'Lena',age:26,city:'Zürich',emoji:'👩',bg:'linear-gradient(160deg,#150f2d,#2a1040,#0f1529)',ints:['Kunst','Reisen','Wein','Fotografie'],bio:'Designerin mit Leidenschaft für Sonnenuntergänge, Rotwein und Gassen die nirgendwo hinführen.',compat:94,badge:'Verifiziert',online:true,char:'nachdenklich, kreativ, offen für Abenteuer',style:'Romantisch & Intim'},
+  {id:2,name:'Sophia',age:29,city:'Bern',emoji:'👩‍🦱',bg:'linear-gradient(160deg,#0f2010,#1a3520)',ints:['Wandern','Kochen','Natur','Yoga'],bio:'Bergführerin & Hobbyköchin. Liebt Morgenläufe, ehrliche Gespräche und stille Wälder.',compat:88,badge:'Premium',online:false,char:'energetisch, bodenständig, humorvoll',style:'Abenteuerlich & Aktiv'},
+  {id:3,name:'Emma',age:31,city:'Basel',emoji:'🧑‍🎤',bg:'linear-gradient(160deg,#2a0f0f,#3d1020)',ints:['Musik','Kino','Tanzen','Lesen'],bio:'Schreibt Kurzgeschichten bei Tag und tanzt Salsa bei Nacht.',compat:82,badge:'Neu',online:true,char:'leidenschaftlich, spontan, tiefgründig',style:'Kulturell & Kreativ'},
+  {id:4,name:'Julian',age:33,city:'Luzern',emoji:'👨',bg:'linear-gradient(160deg,#0f1a2a,#102035)',ints:['Architektur','Kino','Kochen','Reisen'],bio:'Architekt mit Sinn für Ästhetik. Kocht gerne für andere und entdeckt neue Städte.',compat:91,badge:'',online:true,char:'ruhig, ästhetisch, großzügig',style:'Kulinarisch & Genussvoll'},
+  {id:5,name:'Felix',age:28,city:'Zürich',emoji:'🧑',bg:'linear-gradient(160deg,#1a1a10,#2a2815)',ints:['Sport','Natur','Musik','Kaffee'],bio:'Software-Entwickler, der am Wochenende die Alpen erkundet.',compat:79,badge:'Verifiziert',online:false,char:'abenteuerlustig, entspannt, neugierig',style:'Abenteuerlich & Aktiv'},
+  {id:6,name:'Sara',age:25,city:'Winterthur',emoji:'👧',bg:'linear-gradient(160deg,#1a0f2a,#2a1040)',ints:['Yoga','Meditation','Kunst','Reisen'],bio:'Yogalehrerin auf der Suche nach echten Momenten und echten Menschen.',compat:85,badge:'Neu',online:true,char:'achtsam, warmherzig, neugierig',style:'Romantisch & Intim'},
+  {id:7,name:'Marc',age:30,city:'Genf',emoji:'🧑‍💼',bg:'linear-gradient(160deg,#0a1020,#151f30)',ints:['Wein','Reisen','Fotografie','Kaffee'],bio:'Produktmanager & Weinliebhaber. Entdeckt gerne neue Orte mit interessanten Menschen.',compat:76,badge:'',online:true,char:'offen, kommunikativ, weltoffen',style:'Kulinarisch & Genussvoll'},
+  {id:8,name:'Nina',age:27,city:'Zürich',emoji:'👩‍🔬',bg:'linear-gradient(160deg,#1a1020,#2d1535)',ints:['Kino','Lesen','Natur','Wandern'],bio:'Biologin, Bücherwurm und Kinofan. Liebt Gespräche über Wissenschaft und das Leben.',compat:87,badge:'Verifiziert',online:false,char:'intellektuell, neugierig, warmherzig',style:'Kulturell & Kreativ'}
+];
+const STYLES=[
+  {l:'🕯 Romantisch',f:'Romantisch & Intim'},{l:'🏔 Abenteuerlich',f:'Abenteuerlich & Aktiv'},
+  {l:'🎨 Kulturell',f:'Kulturell & Kreativ'},{l:'⚡ Spontan',f:'Spontan & Locker'},
+  {l:'🍷 Genuss',f:'Kulinarisch & Genussvoll'},{l:'🌿 Natur',f:'Entspannt & Naturnah'}
+];
+const LIKED_FAKE=[
+  {e:'👩‍🦰',n:'Lara M.',m:'28 · Zürich'},{e:'🧑',n:'Max K.',m:'31 · Bern'},
+  {e:'👩',n:'Julia S.',m:'26 · Basel'},{e:'👨',n:'Tim R.',m:'34 · Luzern'},
+  {e:'👩‍🦱',n:'Anna L.',m:'29 · Zürich'},{e:'🧑‍💼',n:'Ben B.',m:'32 · Winterthur'},
+];
+const PLANS=[
+  {key:'free',ico:'🌸',name:'Basis',desc:'Kostenlos loslegen',pm:'Kostenlos',py:'Kostenlos',
+   feats:['10 Likes täglich','1 Super Like','KI-Date 3×/Woche','Basis-Filter'],
+   no:['Unlimited Likes','Wer mag dich?','Rewind','Boost']},
+  {key:'gold',ico:'✦',name:'Gold',desc:'Für alle die es ernst meinen',pm:'9,99€',py:'5,99€',pop:true,
+   feats:['Unlimited Likes','5 Super Likes/Tag','Wer hat dich geliked?','Rewind','1 Boost/Monat','KI-Date unbegrenzt','Incognito-Modus'],
+   no:['Passport','Lesebestätigungen']},
+  {key:'plat',ico:'★',name:'Platin',desc:'Das komplette Erlebnis',pm:'19,99€',py:'11,99€',plat:true,
+   feats:['Alles aus Gold','Passport — weltweit','Lesebestätigungen','5 Boosts/Monat','Prioritäts-Matching','Rose täglich senden'],
+   no:[]}
+];
+const ADDONS=[
+  {ico:'⚡',nm:'Boost × 1',dc:'30 Min. Top-Sichtbarkeit',pr:'2,99€'},
+  {ico:'⚡',nm:'Boost × 5',dc:'5 Boosts für die Woche',pr:'9,99€'},
+  {ico:'★',nm:'Super Likes × 5',dc:'Zeig echtes Interesse',pr:'3,49€'},
+  {ico:'🌹',nm:'Rose × 10',dc:'Stärker als ein Like',pr:'4,99€'},
+  {ico:'↩',nm:'Rewind × 3',dc:'Versehentlich gepasst?',pr:'1,99€'},
+  {ico:'👁',nm:'Profilbesuche',dc:'Wer war auf deinem Profil?',pr:'4,99€'},
+];
+
+/* ══════════ UTILS ══════════ */
+function toast(msg){
+  const w=document.getElementById('toasts');
+  const t=document.createElement('div');t.className='t-item';t.textContent=msg;w.appendChild(t);
+  setTimeout(()=>{t.style.animation='tOut .3s ease both';setTimeout(()=>t.remove(),300);},3200);
+}
+function openSheet(html){
+  const sh=document.getElementById('modal-sheet');
+  sh.innerHTML=`<div class="sheet-handle"></div><button class="sheet-close" onclick="closeSheet()">✕</button>`+html;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeSheet(){document.getElementById('modal-bg').classList.remove('open');}
+function hearts(cx,cy){
+  const e=['♥','💕','✨','🌹'],c=['#d4925a','#d95f72','#f08898','#eab97c'];
+  for(let i=0;i<8;i++)setTimeout(()=>{
+    const el=document.createElement('div');el.className='fh';
+    el.style.cssText=`left:${cx+(Math.random()-.5)*55}px;top:${cy}px;font-size:${14+Math.random()*11}px;--r:${(Math.random()-.5)*28}deg;color:${c[~~(Math.random()*c.length)]};`;
+    el.textContent=e[~~(Math.random()*e.length)];document.body.appendChild(el);setTimeout(()=>el.remove(),2100);
+  },i*50);
+}
+function confetti(){
+  const c=['#d4925a','#d95f72','#f08898','#5bbfaa','#eab97c','#fff'];
+  for(let i=0;i<60;i++)setTimeout(()=>{
+    const el=document.createElement('div');el.className='cfp';
+    el.style.cssText=`left:${Math.random()*100}vw;top:-8px;background:${c[~~(Math.random()*c.length)]};--d:${2+Math.random()*2}s;--x:${(Math.random()-.5)*200}px;transform:rotate(${Math.random()*360}deg);`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),4500);
+  },i*48);
+}
+
+/* ══════════ SCREENS ══════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  const el=document.getElementById(id);if(el)el.classList.add('on');
+  if(id==='s-app'){document.getElementById('s-app').classList.add('on');document.getElementById('s-app').style.display='block';}
+  else{document.getElementById('s-app').classList.remove('on');document.getElementById('s-app').style.display='none';}
+  window.scrollTo(0,0);
+}
+function gotoTab(tab){
+  document.querySelectorAll('.app-tab').forEach(t=>{t.classList.remove('on');});
+  const el=document.getElementById('tab-'+tab);
+  if(el){el.classList.add('on');el.scrollTop=0;}
+  document.querySelectorAll('.bn').forEach(b=>b.classList.remove('on'));
+  const bn=document.getElementById('bn-'+tab);if(bn)bn.classList.add('on');
+  if(tab==='matches'){buildMatches();buildMatchSelector();}
+  if(tab==='ai'){buildMatchSelector();}
+  if(tab==='likes'){buildLikes();}
+  if(tab==='profile'){updateProfileUI();}
+}
+
+/* ══════════ ONBOARDING ══════════ */
+const ONB=[
+  {l:'Schritt 1 von 4',h:'Erzähl uns von dir',s:'Nur echte Menschen. 60 Sekunden genügen.'},
+  {l:'Schritt 2 von 4',h:'Deine Persönlichkeit',s:'Damit wir die richtigen Matches finden.'},
+  {l:'Schritt 3 von 4',h:'Was liebst du?',s:'Wähle mindestens 3 Interessen.'},
+  {l:'Schritt 4 von 4',h:'Dein perfektes Date',s:'Wie magst du Dating am liebsten?'}
+];
+function buildOnb(){
+  // Avatars
+  const as=document.getElementById('av-strip');
+  AVTS.forEach(a=>{const d=document.createElement('div');d.className='av-pill';d.textContent=a;if(a===S.user.av)d.classList.add('on');d.onclick=()=>{as.querySelectorAll('.av-pill').forEach(x=>x.classList.remove('on'));d.classList.add('on');S.user.av=a;};as.appendChild(d);});
+  // Interests
+  const cg=document.getElementById('chip-grid');
+  INTS.forEach(i=>{const b=document.createElement('button');b.className='chip';b.innerHTML=`<span>${i.e}</span>${i.l}`;b.onclick=()=>{b.classList.toggle('on');S.user.interests=Array.from(cg.querySelectorAll('.on')).map(x=>x.textContent.trim());};cg.appendChild(b);});
+  // Date prefs
+  const dg=document.getElementById('dpg');
+  DPRFS.forEach(p=>{const d=document.createElement('div');d.className='dpo';d.innerHTML=`<div class="dpo-i">${p.e}</div><div class="dpo-l">${p.l}</div><div class="dpo-d">${p.d}</div>`;d.onclick=()=>{d.classList.toggle('on');S.user.prefs=Array.from(dg.querySelectorAll('.on')).map(x=>x.querySelector('.dpo-l').textContent);};dg.appendChild(d);});
+  buildQuiz(0);updateOnb();
+}
+function buildQuiz(i){
+  const q=QUIZ[i];
+  document.getElementById('quiz-q').textContent=q.q;
+  const oo=document.getElementById('quiz-opts');oo.innerHTML='';
+  q.opts.forEach(o=>{const d=document.createElement('div');d.className='qopt';d.innerHTML=`<div class="qopt-ico">${o.e}</div><div><div class="qopt-l">${o.l}</div><div class="qopt-s">${o.s}</div></div>`;d.onclick=()=>{oo.querySelectorAll('.qopt').forEach(x=>x.classList.remove('on'));d.classList.add('on');if(!S.user.personality)S.user.personality=[];S.user.personality[i]=o.s;};oo.appendChild(d);});
+}
+function updateOnb(){
+  const m=ONB[S.onbStep-1];
+  document.getElementById('onb-lbl').textContent=m.l;
+  document.getElementById('onb-h').textContent=m.h;
+  document.getElementById('onb-sub').textContent=m.s;
+  ['os1','os2','os3','os4'].forEach((id,j)=>document.getElementById(id).classList.toggle('on',j===S.onbStep-1));
+  document.getElementById('onb-bk').style.opacity=S.onbStep===1?'0':'1';
+  document.getElementById('onb-bk').style.pointerEvents=S.onbStep===1?'none':'auto';
+  document.getElementById('onb-nxt').textContent=S.onbStep===4?'Matches finden ✦':'Weiter';
+  // progress
+  const pg=document.getElementById('onb-prog');pg.innerHTML='';
+  for(let i=0;i<4;i++){const s=document.createElement('div');s.className='onb-prog-seg';if(i<S.onbStep-1)s.classList.add('done');else if(i===S.onbStep-1)s.classList.add('cur');s.innerHTML='<div class="onb-prog-fill"></div>';pg.appendChild(s);}
+  if(S.onbStep===2)buildQuiz(0);
+}
+function startOnb(){buildOnb();showScreen('s-onboard');}
+function nextStep(){
+  if(S.onbStep===1){S.user.name=document.getElementById('fn').value||'Mia';S.user.age=+document.getElementById('fa').value||27;S.user.city=document.getElementById('fc').value||'Zürich';S.user.bio=document.getElementById('fbio').value||'';}
+  if(S.onbStep<4){S.onbStep++;updateOnb();}
+  else{S.liked=[1,4];launchApp();}
+}
+function prevStep(){if(S.onbStep>1){S.onbStep--;updateOnb();}}
+function launchApp(){
+  document.getElementById('app-av').textContent=S.user.av;
+  document.getElementById('bn-av').textContent=S.user.av;
+  showScreen('s-app');buildDeck();updateBadges();toast('🎉 Willkommen, '+S.user.name+'!');
+}
+function quickDemo(){
+  S.user={name:'Mia',age:27,city:'Zürich',bio:'Berge, Kaffee und Gespräche bis Mitternacht.',av:'👩',interests:['Wandern','Kaffee','Kino','Kunst'],prefs:['Draußen & Natur'],personality:['Kreativ','Romantisch']};
+  S.liked=[1,4,6];launchApp();toast('🚀 Demo-Modus!');
+}
+function openLogin(){
+  openSheet(`<div style="text-align:center;margin-bottom:24px;"><div class="prem-h">Willkommen zurück</div><p class="prem-sub">Melde dich an um weiterzumachen.</p></div>
+  <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:18px;">
+    <div class="cg"><label>E-Mail</label><select style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;"><option>du@beispiel.de</option></select></div>
+    <div class="cg" style="margin-top:4px;"><label>Passwort</label><select style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;"><option>••••••••</option></select></div>
+  </div>
+  <button onclick="quickDemo();closeSheet();" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:var(--app-bg);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;">Anmelden</button>
+  <p style="text-align:center;font-size:12px;color:var(--mist);margin-top:14px;cursor:pointer;" onclick="startOnb();closeSheet();">Noch kein Account? Registrieren →</p>`);
+}
+
+/* ══════════ SWIPE ══════════ */
+function buildDeck(){
+  const w=document.getElementById('deck-wrap');w.innerHTML='';
+  const vis=PROFILES.slice(S.swipeIdx,S.swipeIdx+3);
+  if(!vis.length){
+    w.innerHTML=`<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--app-card);border-radius:26px;text-align:center;padding:32px;border:1px solid var(--app-rim);">
+      <div style="font-size:48px;margin-bottom:14px;">🌹</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--cream);margin-bottom:8px;">Alle gesehen!</div>
+      <p style="font-size:13px;color:var(--mist);margin-bottom:20px;line-height:1.6;">Schau dir deine Matches an.</p>
+      <button onclick="gotoTab('matches')" style="padding:11px 24px;border-radius:100px;background:var(--amber);color:var(--app-bg);border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;">Matches ansehen →</button>
+    </div>`;return;
+  }
+  updLimits();
+  vis.slice().reverse().forEach((p,ri)=>{
+    const i=vis.length-1-ri;
+    const c=document.createElement('div');c.className='s-card';c.id='sc'+p.id;
+    c.style.cssText=`transform:scale(${1-i*.033}) translateY(${i*11}px);z-index:${10-i};background:${p.bg};`;
+    c.innerHTML=`<div class="sc-bg" style="background:${p.bg}"><span style="position:relative;z-index:1;font-size:98px;">${p.emoji}</span><div class="sc-shade"></div>${p.online?'<div class="sc-online"></div>':''}${p.badge?`<div class="sc-vbadge">${p.badge}</div>`:''}<div class="sc-like-lbl">LIKE</div><div class="sc-nope-lbl">NOPE</div></div><div class="sc-body"><div class="sc-pill">✦ ${p.compat}% Match</div><div class="sc-name">${p.name}<span class="sc-age">${p.age}</span></div><div class="sc-loc">📍 ${p.city}</div><div class="sc-tags">${p.ints.map(t=>`<span class="sc-tag">${t}</span>`).join('')}</div></div>`;
+    if(i===0)initDrag(c,p);
+    w.appendChild(c);
+  });
+  document.getElementById('disc-sub').textContent=(PROFILES.length-S.swipeIdx)+' Profile verfügbar';
+  document.getElementById('deck-meta').textContent=(PROFILES.length-S.swipeIdx)+' verbleibend';
+}
+function initDrag(card,profile){
+  let sx,dy=0,dx=0,drag=false;
+  const li=card.querySelector('.sc-like-lbl'),no=card.querySelector('.sc-nope-lbl');
+  card.addEventListener('mousedown',e=>{sx=e.clientX;dy=e.clientY;drag=true;card.style.transition='none';});
+  document.addEventListener('mousemove',e=>{
+    if(!drag)return;dx=e.clientX-sx;const ddy=e.clientY-dy;
+    card.style.transform=`translate(${dx}px,${ddy*.22}px) rotate(${dx*.055}deg)`;
+    const p=Math.min(Math.abs(dx)/85,1);
+    if(dx>15){li.style.opacity=p;no.style.opacity=0;}
+    else if(dx<-15){no.style.opacity=p;li.style.opacity=0;}
+    else{li.style.opacity=0;no.style.opacity=0;}
+  });
+  document.addEventListener('mouseup',()=>{
+    if(!drag)return;drag=false;
+    if(dx>100)doSwipeCard('right',profile);else if(dx<-100)doSwipeCard('left',profile);
+    else{card.style.transition='transform .36s cubic-bezier(.2,.8,.3,1)';card.style.transform='scale(1) translateY(0)';li.style.opacity=0;no.style.opacity=0;}
+    dx=0;
+  });
+}
+function doSwipeCard(dir,p){
+  const c=document.getElementById('sc'+p.id);if(!c)return;
+  c.classList.add('fly');
+  if(dir==='right'){
+    if(S.likesLeft<=0&&S.plan==='free'){toast('❤️ Keine Likes mehr — upgrade!');c.style.transform='';c.classList.remove('fly');return;}
+    c.style.transform='translate(160%,-30px) rotate(25deg)';c.style.opacity='0';
+    if(!S.liked.includes(p.id))S.liked.push(p.id);
+    if(S.plan==='free')S.likesLeft=Math.max(0,S.likesLeft-1);
+    showMatchPopup(p);
+  }else{
+    c.style.transform='translate(-160%,-30px) rotate(-25deg)';c.style.opacity='0';
+    S.lastPassed={idx:S.swipeIdx,profile:p};S.passed.push(p.id);
+  }
+  updLimits();
+  setTimeout(()=>{S.swipeIdx++;buildDeck();},520);
+}
+function swipe(dir){doSwipeCard(dir,PROFILES[S.swipeIdx]);}
+function doSuperLike(){
+  if(S.starsLeft<=0&&S.plan==='free'){toast('★ Keine Super Likes — upgrade!');openPremSheet();return;}
+  const p=PROFILES[S.swipeIdx];if(!p)return;
+  if(!S.liked.includes(p.id))S.liked.push(p.id);
+  if(S.plan==='free')S.starsLeft=0;
+  const c=document.getElementById('sc'+p.id);
+  if(c){c.classList.add('fly');c.style.transform='translateY(-160%) scale(.75)';c.style.opacity='0';}
+  setTimeout(()=>{S.swipeIdx++;buildDeck();},520);
+  toast(`⭐ Super-Like an ${p.name}!`);updateBadges();
+}
+function doRewind(){
+  if(S.plan==='free'){toast('↩ Rewind ist ab Gold');openPremSheet();return;}
+  if(S.lastPassed){S.swipeIdx=S.lastPassed.idx;S.passed=S.passed.filter(id=>id!==S.lastPassed.profile.id);buildDeck();toast('↩ Zurückgespult!');S.lastPassed=null;}else toast('Nichts zum Rückgängigmachen.');
+}
+function updLimits(){
+  document.getElementById('likes-n').textContent=S.plan==='free'?S.likesLeft:'∞';
+  document.getElementById('stars-n').textContent=S.plan==='free'?S.starsLeft:(S.plan==='gold'?5:'∞');
+  const lc=document.getElementById('lim-likes');if(lc)lc.className='lim-chip'+(S.likesLeft<=2&&S.plan==='free'?' warn':'');
+}
+function fpill(el){document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+function showMatchPopup(p){
+  updateBadges();
+  openSheet(`<div style="text-align:center;padding:8px 0 4px;">
+    <div style="font-size:40px;margin-bottom:14px;">💕</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--cream);margin-bottom:8px;">Es ist ein Match!</div>
+    <p style="font-size:14px;color:var(--mist);line-height:1.7;margin-bottom:22px;">Du und ${p.name} mögt euch gegenseitig!</p>
+    <div style="display:flex;justify-content:center;gap:18px;margin-bottom:26px;">
+      <div style="width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;border:2.5px solid var(--amber);background:var(--app-card);">${S.user.av}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--amber);font-style:italic;align-self:center;">♥</div>
+      <div style="width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;border:2.5px solid var(--amber);background:var(--app-card);">${p.emoji}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <button onclick="openChat(${p.id});closeSheet();" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--coral),var(--coral2));color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;">💬 Nachricht schreiben</button>
+      <button onclick="openAiFor(${p.id});closeSheet();" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:var(--app-bg);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;">✦ KI-Date planen</button>
+      <button onclick="closeSheet()" style="width:100%;padding:13px;border-radius:12px;background:var(--app-lift);color:var(--mist);border:1px solid var(--app-rim);font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;">Weiter swipen</button>
+    </div>
+  </div>`);
+  confetti();
+}
+
+/* ══════════ MATCHES ══════════ */
+function buildMatches(){
+  const ms=PROFILES.filter(p=>S.liked.includes(p.id));
+  document.getElementById('match-sub-lbl').textContent=`${ms.length} Match${ms.length!==1?'es':''} — KI-Date planen ✦`;
+  // Bubbles
+  const br=document.getElementById('bubbles-row');br.innerHTML='';
+  ms.forEach(m=>{
+    const d=document.createElement('div');d.className='bub';
+    d.innerHTML=`<div class="bub-av">${m.emoji}${m.online?'<div class="bub-dot"></div>':''}</div><div class="bub-n">${m.name}</div>`;
+    d.onclick=()=>openChat(m.id);br.appendChild(d);
+  });
+  if(!ms.length){br.innerHTML=`<div style="font-size:13px;color:var(--mist);padding:10px 0;">Noch keine Matches — erst swipen!</div>`;}
+  // Grid
+  const mg=document.getElementById('m-grid');mg.innerHTML='';
+  if(!ms.length){mg.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px 0;"><div style="font-size:44px;margin-bottom:12px;">💫</div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--cream);margin-bottom:8px;">Noch keine Matches</div><p style="font-size:13px;color:var(--mist);margin-bottom:18px;">Entdecke Profile und swipe rechts!</p><button onclick="gotoTab('discover')" style="padding:11px 24px;border-radius:100px;background:linear-gradient(135deg,var(--coral),var(--coral2));color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;">Profile entdecken →</button></div>`;return;}
+  ms.forEach(m=>{
+    const c=document.createElement('div');c.className='m-card';
+    c.innerHTML=`<div class="mc-ph" style="background:${m.bg}"><span style="font-size:62px;position:relative;z-index:1;">${m.emoji}</span><div class="mc-shade"></div>${m.online?'<div class="mc-online"></div>':''}${m.badge?`<div class="mc-bdg${m.badge==='Neu'?' new':''}">${m.badge}</div>`:''}<div class="mc-pct-wrap"><div class="mc-pct-lbl">${m.compat}% Match</div><div class="mc-pct-bar"><div class="mc-pct-fill" style="width:${m.compat}%"></div></div></div></div><div class="mc-body"><div class="mc-name">${m.name}<span class="mc-age">${m.age}</span></div><div class="mc-loc">📍 ${m.city}</div><div class="mc-tags">${m.ints.slice(0,3).map(t=>`<span class="mc-tag">${t}</span>`).join('')}</div><div class="mc-acts"><button class="mc-btn mc-ai" onclick="event.stopPropagation();openAiFor(${m.id})">✦ KI-Date</button><button class="mc-btn mc-ch" onclick="event.stopPropagation();openChat(${m.id})">💬 Chat</button></div></div>`;
+    mg.appendChild(c);
+  });
+}
+function updateBadges(){
+  const n=S.liked.length;const b=document.getElementById('m-badge');
+  b.textContent=n;b.classList.toggle('vis',n>0);
+  const ms=document.getElementById('stat-matches');if(ms)ms.textContent=n;
+}
+function buildMatchSelector(){
+  const ms=PROFILES.filter(p=>S.liked.includes(p.id));
+  const mr=document.getElementById('ms-row');if(!mr)return;mr.innerHTML='';
+  if(!ms.length){mr.innerHTML=`<div style="font-size:13px;color:var(--mist);padding:8px 0;">Erst swipen! <button onclick="gotoTab('discover')" style="color:var(--amber);background:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;">Los →</button></div>`;return;}
+  ms.forEach(m=>{
+    const d=document.createElement('div');d.className='ms-item'+(S.curMatch?.id===m.id?' on':'');
+    d.innerHTML=`<div class="ms-av">${m.emoji}</div><div class="ms-n">${m.name}</div>`;
+    d.onclick=()=>{S.curMatch=m;mr.querySelectorAll('.ms-item').forEach(x=>x.classList.remove('on'));d.classList.add('on');};
+    mr.appendChild(d);
+  });
+  if(!S.curMatch&&ms.length)S.curMatch=ms[0];
+  // Style pills
+  const sp=document.getElementById('style-pills');if(sp){sp.innerHTML='';
+  STYLES.forEach((st,i)=>{const b=document.createElement('button');b.className='sp'+(i===0?' on':'');b.textContent=st.l;b.onclick=()=>{sp.querySelectorAll('.sp').forEach(x=>x.classList.remove('on'));b.classList.add('on');S.selStyle=st.f;};sp.appendChild(b);});}
+}
+function openAiFor(id){S.curMatch=PROFILES.find(p=>p.id===id);document.getElementById('ai-res').classList.remove('on');document.getElementById('ai-load').classList.remove('on');S.curResult=null;gotoTab('ai');}
+
+/* ══════════ AI DATE ══════════ */
+async function genDate(){
+  if(!S.curMatch){toast('⚠️ Wähle zuerst ein Match!');return;}
+  const btn=document.getElementById('gen-btn');
+  const load=document.getElementById('ai-load');
+  const res=document.getElementById('ai-res');
+  res.classList.remove('on');load.classList.add('on');btn.disabled=true;
+  // Steps animation
+  const lw=document.getElementById('load-steps');lw.innerHTML='';
+  const steps=['Profile werden analysiert…','Gemeinsame Interessen gewichtet…','Persönlichkeiten abgeglichen…',`Beste Orte in ${S.curMatch.city} ermittelt…`,'Date-Konzept wird verfasst…'];
+  steps.forEach(s=>{const d=document.createElement('div');d.className='lst';d.textContent=s;lw.appendChild(d);});
+  lw.querySelectorAll('.lst').forEach((l,i)=>setTimeout(()=>l.classList.add('v'),(i+1)*700));
+  const u=S.user,m=S.curMatch;
+  const shared=m.ints.filter(x=>u.interests.includes(x));
+  const prompt=`Du bist ein einfühlsamer KI-Dating-Coach. Erstelle einen hyperdetaillierten Date-Vorschlag auf Deutsch.
+
+PERSON 1 — ${u.name}, ${u.age}, ${u.city}
+Bio: ${u.bio}
+Persönlichkeit: ${(u.personality||[]).join(', ')||'offen, neugierig'}
+Interessen: ${u.interests.join(', ')||'vielfältig'}
+Date-Vorlieben: ${(u.prefs||[]).join(', ')||'offen'}
+
+PERSON 2 — ${m.name}, ${m.age}, ${m.city}
+Bio: ${m.bio}
+Charakter: ${m.char}
+Interessen: ${m.ints.join(', ')}
+
+GEMEINSAM: ${shared.join(', ')||'wird erschlossen'}
+STIL: ${S.selStyle}
+BUDGET: ${document.getElementById('cfg-bgt').value}
+TAGESZEIT: ${document.getElementById('cfg-tod').value}
+WÜNSCHE: ${document.getElementById('cfg-wish').value||'keine'}
+
+Antworte NUR mit rohem JSON (kein Markdown):
+{"title":"Poetischer Date-Name","tagline":"Eine Zeile die Vorfreude weckt","vibe":"3 Emojis + Atmosphäre-Satz","why":"3 Sätze warum diese zwei perfekt passen — konkret","activity":"Name der Aktivität","detail":"3 lebendige Sätze zum Ablauf","location":"Konkreter Ort in ${m.city}","timing":"Tageszeit + kurze Begründung","duration":"Gesamtdauer","conversation":["Frage 1","Frage 2","Frage 3"],"icebreaker":"Kreative Eisbrecher-Idee","moment":"Konkreter romantischer Filmmoment","prep":"1 Tipp für ${u.name}","tips":["Hinweis 1","Hinweis 2"]}`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    const data=await r.json();
+    let raw=data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    const jm=raw.match(/\{[\s\S]*\}/);
+    const d=JSON.parse(jm?jm[0]:raw);
+    S.curResult=d;showResult(d);
+  }catch(e){showResErr();}
+  finally{load.classList.remove('on');btn.disabled=false;}
+}
+function showResult(d){
+  document.getElementById('res-html').innerHTML=`
+    <div class="res-eyebrow">✦ KI Date-Vorschlag</div>
+    <div class="res-h">${d.title}</div>
+    <div class="res-tl">"${d.tagline}"</div>
+    <div class="res-vibe">${d.vibe}</div>
+    <div class="res-sec" style="margin-top:16px;">
+      <div class="res-lbl">Warum ihr perfekt passt</div>
+      <div class="res-txt">${d.why}</div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Das Date</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--cream);margin-bottom:8px;">${d.activity}</div>
+      <div class="dchips">
+        <div class="dchip"><div class="dchip-i">📍</div><div class="dchip-v">${(d.location||'').split(',')[0]}</div><div class="dchip-k">Ort</div></div>
+        <div class="dchip"><div class="dchip-i">🕐</div><div class="dchip-v">${(d.timing||'').split(' ')[0]}</div><div class="dchip-k">Zeit</div></div>
+        <div class="dchip"><div class="dchip-i">⏱</div><div class="dchip-v">${d.duration}</div><div class="dchip-k">Dauer</div></div>
+      </div>
+      <div class="res-txt">${d.detail}</div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Eisbrecher 🎯</div>
+      <div class="spec-box"><p>${d.icebreaker}</p></div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Gesprächsstarter</div>
+      <div class="convos">${(d.conversation||[]).map(q=>`<div class="convo">"${q}"</div>`).join('')}</div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Der magische Moment 💫</div>
+      <div class="spec-box rose-b"><p>${d.moment}</p></div>
+    </div>
+    <div class="res-sec">
+      <div class="res-lbl">Deine Vorbereitung</div>
+      <div class="res-txt">${d.prep}</div>
+      <div class="warn-chips">${(d.tips||[]).map(t=>`<span class="warn-chip">⚠ ${t}</span>`).join('')}</div>
+    </div>`;
+  document.getElementById('ai-res').classList.add('on');
+  document.getElementById('ai-res').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function showResErr(){document.getElementById('res-html').innerHTML=`<div style="text-align:center;padding:32px;"><div style="font-size:32px;margin-bottom:10px;">⚡</div><div style="font-size:16px;color:var(--cream);">KI kurz ausgelastet</div><p style="font-size:12px;color:var(--mist);margin-top:6px;">Bitte nochmal versuchen.</p></div>`;document.getElementById('ai-res').classList.add('on');}
+function acceptDate(){confetti();const m=S.curMatch;toast('🌹 Date mit '+m.name+' bestätigt!');openChat(m.id);}
+function shareDate(){navigator.clipboard?.writeText('Mein KI-Date auf Amoré 🌹').then(()=>toast('🔗 Kopiert!'));}
+
+/* ══════════ CHAT ══════════ */
+function openChat(id){
+  S.curMatch=PROFILES.find(p=>p.id===id);const m=S.curMatch;
+  document.getElementById('ch-av').innerHTML=m.emoji+'<div class="ch-dot"></div>';
+  document.getElementById('ch-name').textContent=m.name;
+  const body=document.getElementById('ch-body');body.innerHTML='';
+  const msgs=[{from:'them',text:`Hey ${S.user.name||'du'}! 😊 Freut mich, dass wir gematcht haben!`},{from:'me',text:`Mich auch! Dein Profil hat mich sofort angesprochen. 💕`},{from:'them',text:`Haha danke! Was machst du so am Wochenende?`}];
+  msgs.forEach((msg,i)=>setTimeout(()=>addMsg(msg.from,msg.from==='me'?S.user.av:m.emoji,msg.text),i*350));
+  if(S.curResult){
+    setTimeout(()=>{
+      const dc=document.createElement('div');dc.className='date-bubble';dc.style.marginLeft='38px';
+      dc.innerHTML=`<div class="db-pill">✦ KI Date-Vorschlag</div><div class="db-h">${S.curResult.title||''}</div><div class="db-sub">${S.curResult.tagline||''}</div><div class="db-chips"><span class="db-chip">📍 ${(S.curResult.location||'').split(',')[0]}</span><span class="db-chip">⏱ ${S.curResult.duration||''}</span></div>`;
+      body.appendChild(dc);body.scrollTop=body.scrollHeight;
+      const tb=mkTyping(m.emoji);body.appendChild(tb);body.scrollTop=body.scrollHeight;
+      setTimeout(()=>{body.removeChild(tb);addMsg('them',m.emoji,`Das klingt traumhaft! 😍 Ich bin auf jeden Fall dabei!`);},1800);
+    },msgs.length*350+500);
+  }
+  gotoTab('chat');
+}
+function mkTyping(av){const w=document.createElement('div');w.className='msg them';w.innerHTML=`<div class="msg-av">${av}</div><div class="typing-bbl"><div class="td"></div><div class="td"></div><div class="td"></div></div>`;return w;}
+function addMsg(side,av,txt){
+  const body=document.getElementById('ch-body');
+  const w=document.createElement('div');w.className=`msg ${side==='me'?'me':'them'}`;
+  const now=new Date(),t=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  w.innerHTML=`<div class="msg-av">${av}</div><div><div class="msg-bbl">${txt}</div><div class="msg-time">${t}</div></div>`;
+  body.appendChild(w);body.scrollTop=body.scrollHeight;
+}
+async function sendMsg(){
+  const inp=document.getElementById('ch-inp');const txt=inp.value.trim();if(!txt||!S.curMatch)return;
+  const m=S.curMatch;addMsg('me',S.user.av,txt);inp.value='';
+  const body=document.getElementById('ch-body');const tb=mkTyping(m.emoji);body.appendChild(tb);body.scrollTop=body.scrollHeight;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:120,system:`Du bist ${m.name}, ${m.age} aus ${m.city}. Bio: ${m.bio}. Charakter: ${m.char}. Du chattest auf Deutsch mit deinem Match ${S.user.name||'dir'}. Antworte warm, natürlich, leicht flirty — max. 2 kurze Sätze, kein Preamble.`,messages:[{role:'user',content:txt}]})});
+    const data=await r.json();const reply=data.content[0]?.text?.trim()||'😊';
+    body.removeChild(tb);addMsg('them',m.emoji,reply);
+  }catch{body.removeChild(tb);addMsg('them',m.emoji,'😊');}
+}
+
+/* ══════════ LIKES ══════════ */
+function buildLikes(){
+  const g=document.getElementById('likes-grid');g.innerHTML='';
+  const has=S.plan!=='free';
+  document.getElementById('likes-upsell').style.display=has?'none':'flex';
+  LIKED_FAKE.forEach((p,i)=>{
+    const unlk=has||i===0;
+    const c=document.createElement('div');c.className='lc';
+    c.innerHTML=`<div class="lc-ph" style="background:linear-gradient(135deg,#1a0f2a,#2a1040);"><span style="font-size:44px;position:relative;z-index:1;${!unlk?'opacity:.28;':''}">${p.e}</span>${!unlk?'<div class="lc-blur"></div><div class="lc-lock"><div class="lc-lock-i">🔒</div><div class="lc-lock-l">Gold</div></div>':''}<div class="lc-heart">♥</div></div><div class="lc-body"><div class="lc-name${!unlk?' blur':''}">${p.n}</div><div class="lc-meta">${p.m}</div>${unlk?`<button onclick="toast('💕 Match!')" style="width:100%;margin-top:7px;padding:7px;border-radius:8px;background:linear-gradient(135deg,var(--coral),var(--coral2));color:#fff;border:none;font-size:10px;font-weight:600;cursor:pointer;">Match zurück ♥</button>`:`<button onclick="openPremSheet()" style="width:100%;margin-top:7px;padding:7px;border-radius:8px;background:rgba(212,146,90,.1);border:1px solid rgba(212,146,90,.22);color:var(--amber);font-size:10px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;">Entsperren ✦</button>`}</div>`;
+    g.appendChild(c);
+  });
+}
+
+/* ══════════ PREMIUM ══════════ */
+function openPremSheet(){renderPremSheet();}
+let billC='m';
+function renderPremSheet(){
+  let html=`<div class="prem-h">Upgrade deine Erfahrung</div><p class="prem-sub">Keine versteckten Kosten. Jederzeit kündbar.</p>
+  <div class="bill-row"><div class="bill-tg">
+    <button class="bto${billC==='m'?' on':''}" onclick="billC='m';renderPremSheet()">Monatlich</button>
+    <button class="bto${billC==='y'?' on':''}" onclick="billC='y';renderPremSheet()">Jährlich<span class="bto-save">−40%</span></button>
+  </div></div>
+  <div class="plans-stack">`;
+  PLANS.forEach(p=>{const owned=S.plan===p.key;const pr=billC==='m'?p.pm:p.py;
+    html+=`<div class="plan-r${p.pop?' hl':''}${p.plat?' hl2':''}" onclick="choosePlan('${p.key}')">
+      ${p.pop?'<div class="pr-pop">Beliebtester Plan</div>':''}
+      <div class="pr-ico">${p.ico}</div>
+      <div class="pr-inf"><div class="pr-name">${p.name}</div><div class="pr-desc">${p.desc}</div></div>
+      <div class="pr-price"><div class="pr-amt${p.plat?' plat':''}">${pr}</div><div class="pr-per">${pr!=='Kostenlos'?'/ Monat':''}</div></div>
+    </div>`;});
+  html+=`</div>
+  <div class="feats-box"><div class="fb-title">Was du mit Gold bekommst</div>
+  ${['Unlimited Likes','5 Super Likes/Tag','Wer hat dich geliked?','Rewind — Swipe rückgängig','1 Boost/Monat','KI-Date unbegrenzt','Incognito-Modus'].map(f=>`<div class="fb-item"><div class="fb-check">✓</div>${f}</div>`).join('')}
+  </div>
+  <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--mist);margin-bottom:10px;">Einzeln kaufen</div>
+  <div class="addons-grid">${ADDONS.slice(0,4).map(a=>`<div class="addon-c" onclick="toast('✓ ${a.nm} gekauft!')"><div class="addon-ico">${a.ico}</div><div class="addon-nm">${a.nm}</div><div class="addon-dc">${a.dc}</div><div style="display:flex;align-items:center;justify-content:space-between;"><div class="addon-pr">${a.pr}</div><button onclick="event.stopPropagation();toast('✓ ${a.nm} gekauft!')" style="padding:5px 12px;border-radius:8px;background:rgba(212,146,90,.1);border:1px solid rgba(212,146,90,.22);color:var(--amber);font-size:11px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;">Kaufen</button></div></div>`).join('')}</div>
+  <div class="guarantee-box"><div class="gb-ico">🛡</div><div><div class="gb-h">14-Tage Garantie</div><div class="gb-p">Nicht zufrieden? Volle Rückerstattung, keine Fragen gestellt.</div></div></div>`;
+  openSheet(html);
+}
+function choosePlan(key){
+  if(key==='free'){S.plan='free';updateProfileUI();renderPremSheet();toast('Basis-Plan aktiv.');return;}
+  const p=PLANS.find(x=>x.key===key);
+  openSheet(`<div style="text-align:center;margin-bottom:20px;"><div style="font-size:36px;margin-bottom:12px;">${p.ico}</div><div class="prem-h">Amoré ${p.name}</div><p class="prem-sub">14 Tage kostenlos — danach ${p.pm}/Monat. Jederzeit kündbar.</p></div>
+  <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:20px;">
+    <div class="cg"><label>Karteninhaber</label><input placeholder="Max Mustermann" value="Mia Beispiel" style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;"></div>
+    <div class="cg" style="margin-top:4px;"><label>Kartennummer</label><input placeholder="4242 4242 4242 4242" style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="cg"><label>Ablauf</label><input placeholder="MM/JJ" style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;"></div>
+      <div class="cg"><label>CVC</label><input placeholder="123" style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;"></div>
+    </div>
+  </div>
+  <button onclick="confirmPlan('${key}')" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:var(--app-bg);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;letter-spacing:.5px;">🔒 14 Tage gratis starten</button>
+  <p style="text-align:center;font-size:11px;color:var(--fog);margin-top:12px;">SSL-verschlüsselt · DSGVO-konform</p>`);
+}
+function confirmPlan(key){const p=PLANS.find(x=>x.key===key);S.plan=key;confetti();toast('🎉 Willkommen in Amoré '+p.name+'!');updateProfileUI();closeSheet();}
+
+/* ══════════ BOOST ══════════ */
+function openBoostSheet(){
+  openSheet(`<div style="text-align:center;margin-bottom:20px;">
+    <div class="boost-ring-big"><div class="brb-inner">⚡</div></div>
+    <div class="prem-h">Boost aktivieren</div>
+    <p class="prem-sub">30 Minuten ganz oben — bis zu <strong style="color:#c4aef5;">10× mehr Aufrufe</strong>.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:20px;">
+    <div class="plan-r hl" onclick="this.parentElement.querySelectorAll('.plan-r').forEach(x=>x.classList.remove('hl'));this.classList.add('hl')"><div class="pr-ico">⚡</div><div class="pr-inf"><div class="pr-name">30 Minuten</div><div class="pr-desc">Perfekt für heute Abend</div></div><div class="pr-price"><div class="pr-amt">2,99€</div></div></div>
+    <div class="plan-r" onclick="this.parentElement.querySelectorAll('.plan-r').forEach(x=>x.classList.remove('hl'));this.classList.add('hl')"><div class="pr-ico">⚡⚡</div><div class="pr-inf"><div class="pr-name">60 Minuten</div><div class="pr-desc">Doppelte Wirkung</div></div><div class="pr-price"><div class="pr-amt">4,99€</div></div></div>
+    ${S.plan!=='free'?`<div class="plan-r" onclick="activateBoost();closeSheet();"><div class="pr-ico">🎁</div><div class="pr-inf"><div class="pr-name">Gratis Boost</div><div class="pr-desc">Inklusive in deinem Plan</div></div><div style="font-size:13px;font-weight:600;color:var(--sage);">Frei</div></div>`:''}
+  </div>
+  <button onclick="activateBoost();closeSheet();" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#b8a0f0,#c4aef5);color:var(--app-bg);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;">⚡ Boost starten</button>`);
+}
+function activateBoost(){toast('⚡ Boost aktiv — du bist ganz oben!');}
+
+/* ══════════ PROFILE ══════════ */
+function updateProfileUI(){
+  document.getElementById('prof-av').textContent=S.user.av;
+  document.getElementById('prof-name').textContent=S.user.name||'Mia';
+  document.getElementById('prof-meta').textContent=`📍 ${S.user.city||'Zürich'} · ${S.user.age||27}`;
+  const tp=document.getElementById('tier-pill');
+  if(S.plan==='plat'){tp.className='tier-pill tp-plat';tp.textContent='★ Platin';}
+  else if(S.plan==='gold'){tp.className='tier-pill tp-gold';tp.textContent='✦ Gold';}
+  else{tp.className='tier-pill tp-free';tp.textContent='✦ Basis';}
+  updateBadges();
+}
+function openEditSheet(){
+  openSheet(`<div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--cream);margin-bottom:20px;">Profil bearbeiten</div>
+  <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:20px;">
+    <div class="cg"><label>Vorname</label><input id="ep-n" value="${S.user.name}" style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;"></div>
+    <div class="cg" style="margin-top:4px;"><label>Stadt</label><input id="ep-c" value="${S.user.city}" style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;"></div>
+    <div class="cg" style="margin-top:4px;"><label>Bio</label><textarea id="ep-b" style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:14px;padding:11px 13px;outline:none;width:100%;height:72px;resize:none;font-family:'Outfit',sans-serif;">${S.user.bio}</textarea></div>
+  </div>
+  <button onclick="saveEdit()" style="width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,var(--amber),var(--amber2));color:var(--app-bg);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;">Speichern</button>`);
+}
+function saveEdit(){
+  const n=document.getElementById('ep-n'),c=document.getElementById('ep-c'),b=document.getElementById('ep-b');
+  if(n)S.user.name=n.value;if(c)S.user.city=c.value;if(b)S.user.bio=b.value;
+  updateProfileUI();closeSheet();toast('✓ Gespeichert!');
+}
+function openSettingsSheet(){
+  openSheet(`<div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--cream);margin-bottom:20px;">Einstellungen</div>
+  ${[{l:'Entdecken aktiv',s:'Dein Profil wird angezeigt',on:true,prem:null},{l:'Incognito-Modus',s:'Nur du gesehene Profile sehen dich',on:false,prem:'Gold'},{l:'Lesebestätigungen',s:'Wann Nachrichten gelesen wurden',on:false,prem:'Platin'},{l:'Benachrichtigungen: Matches',s:'',on:true,prem:null},{l:'Benachrichtigungen: Nachrichten',s:'',on:true,prem:null}].map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--app-rim);"><div><div style="font-size:14px;color:var(--cream);font-weight:400;">${x.l}</div>${x.s?`<div style="font-size:11px;color:var(--mist);margin-top:2px;">${x.s}</div>`:''}${x.prem?`<div style="font-size:10px;color:var(--amber);margin-top:3px;">✦ ${x.prem}</div>`:''}</div><div class="toggle${x.on?' on':''}" onclick="${x.prem?`toast('✦ ${x.prem} erforderlich');`:``}this.classList.toggle('on')"></div></div>`).join('')}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+    <div class="cg"><label>Alter</label><select style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:13px;padding:10px 12px;outline:none;font-family:'Outfit',sans-serif;"><option>18–25</option><option selected>25–35</option><option>35–45</option><option>45+</option></select></div>
+    <div class="cg"><label>Umkreis</label><select style="background:var(--app-lift);border:1px solid var(--app-rim2);border-radius:10px;color:var(--cream);font-size:13px;padding:10px 12px;outline:none;font-family:'Outfit',sans-serif;"><option>10 km</option><option selected>25 km</option><option>50 km</option><option>Weltweit ✦</option></select></div>
+  </div>`);
+}
+function openSafetySheet(){
+  openSheet(`<div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--cream);margin-bottom:18px;">Sicherheit & Datenschutz</div>
+  <div style="background:rgba(91,191,170,.06);border:1px solid rgba(91,191,170,.18);border-radius:12px;padding:14px;margin-bottom:10px;"><div style="color:var(--sage);font-size:13px;font-weight:500;margin-bottom:4px;">✓ Profil verifiziert</div><div style="font-size:12px;color:var(--mist);line-height:1.6;">Ende-zu-Ende verschlüsselt. Deine Daten gehören dir.</div></div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin:16px 0;">
+    <button onclick="toast('🚫 Blockierliste geöffnet')" style="text-align:left;background:var(--app-card);border:1px solid var(--app-rim);border-radius:12px;padding:13px 16px;color:var(--cream);font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;">🚫 Blockierte Nutzer</button>
+    <button onclick="toast('🚨 Report-Formular geöffnet')" style="text-align:left;background:var(--app-card);border:1px solid var(--app-rim);border-radius:12px;padding:13px 16px;color:var(--cream);font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;">🚨 Nutzer melden</button>
+    <button onclick="toast('📄 Datenschutz wird geöffnet')" style="text-align:left;background:var(--app-card);border:1px solid var(--app-rim);border-radius:12px;padding:13px 16px;color:var(--cream);font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;">📄 Datenschutzrichtlinie</button>
+  </div>
+  <div style="background:rgba(217,95,114,.05);border:1px solid rgba(217,95,114,.18);border-radius:12px;padding:14px;">
+    <div style="color:var(--coral);font-size:13px;font-weight:500;margin-bottom:5px;">Gefahrenzone</div>
+    <div style="font-size:12px;color:var(--mist);line-height:1.6;margin-bottom:12px;">Account-Löschung ist permanent.</div>
+    <button onclick="toast('⚠️ Bitte kontaktiere den Support')" style="padding:9px 18px;border-radius:8px;background:transparent;border:1px solid rgba(217,95,114,.3);color:var(--coral);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;">Account löschen</button>
+  </div>`);
+}
+
+/* init */
+updateBadges();
+</script>
+</body>
+</html>
